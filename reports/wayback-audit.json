@@ -1,0 +1,1308 @@
+{
+  "summary": {
+    "total_wayback": 144,
+    "compared": 134,
+    "unusable": 2,
+    "no_archive_match": 8,
+    "mean_jaccard": 0.951,
+    "share_jaccard_ge_90": 82.1,
+    "per_era_mean_jaccard": {
+      "2021-H2": 0.768,
+      "2022-H1": 0.932,
+      "2022-H2": 0.931,
+      "2023-H1": 0.941,
+      "2023-H2": 0.965,
+      "2024-H1": 0.979,
+      "2024-H2": 0.925,
+      "2025-H1": 0.969,
+      "2025-H2": 0.971,
+      "2026-H1": 0.956
+    }
+  },
+  "results": [
+    {
+      "wayback_ts": "20211103102926",
+      "status": "wayback_unusable: ParseFailure",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null
+    },
+    {
+      "wayback_ts": "20211104160319",
+      "status": "no_archive_within_6h",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null,
+      "wayback_records": 103
+    },
+    {
+      "wayback_ts": "20211126120845",
+      "status": "no_archive_within_6h",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null,
+      "wayback_records": 219
+    },
+    {
+      "wayback_ts": "20211126123939",
+      "status": "no_archive_within_6h",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null,
+      "wayback_records": 217
+    },
+    {
+      "wayback_ts": "20211126210855",
+      "status": "no_archive_within_6h",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null,
+      "wayback_records": 194
+    },
+    {
+      "wayback_ts": "20211201223701",
+      "status": "no_archive_within_6h",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null,
+      "wayback_records": 43
+    },
+    {
+      "wayback_ts": "20211203172250",
+      "status": "no_archive_within_6h",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null,
+      "wayback_records": 117
+    },
+    {
+      "wayback_ts": "20211206001134",
+      "status": "no_archive_within_6h",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null,
+      "wayback_records": 81
+    },
+    {
+      "wayback_ts": "20211224102137",
+      "status": "compared",
+      "delta_min": 98,
+      "jaccard": 0.768,
+      "equal": false,
+      "wayback_records": 214,
+      "archive_records": 221
+    },
+    {
+      "wayback_ts": "20220216122220",
+      "status": "compared",
+      "delta_min": 22,
+      "jaccard": 0.843,
+      "equal": false,
+      "wayback_records": 255,
+      "archive_records": 250
+    },
+    {
+      "wayback_ts": "20220216153837",
+      "status": "compared",
+      "delta_min": 21,
+      "jaccard": 0.993,
+      "equal": false,
+      "wayback_records": 284,
+      "archive_records": 286
+    },
+    {
+      "wayback_ts": "20220216155500",
+      "status": "compared",
+      "delta_min": 5,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 286,
+      "archive_records": 286
+    },
+    {
+      "wayback_ts": "20220317085252",
+      "status": "compared",
+      "delta_min": 7,
+      "jaccard": 0.971,
+      "equal": false,
+      "wayback_records": 102,
+      "archive_records": 103
+    },
+    {
+      "wayback_ts": "20220317145150",
+      "status": "compared",
+      "delta_min": 8,
+      "jaccard": 0.907,
+      "equal": false,
+      "wayback_records": 156,
+      "archive_records": 151
+    },
+    {
+      "wayback_ts": "20220411210726",
+      "status": "compared",
+      "delta_min": 7,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 130,
+      "archive_records": 130
+    },
+    {
+      "wayback_ts": "20220414054822",
+      "status": "compared",
+      "delta_min": 12,
+      "jaccard": 0.844,
+      "equal": false,
+      "wayback_records": 40,
+      "archive_records": 43
+    },
+    {
+      "wayback_ts": "20220516100938",
+      "status": "compared",
+      "delta_min": 10,
+      "jaccard": 0.925,
+      "equal": false,
+      "wayback_records": 49,
+      "archive_records": 53
+    },
+    {
+      "wayback_ts": "20220518170815",
+      "status": "compared",
+      "delta_min": 8,
+      "jaccard": 0.95,
+      "equal": false,
+      "wayback_records": 60,
+      "archive_records": 57
+    },
+    {
+      "wayback_ts": "20220531100352",
+      "status": "compared",
+      "delta_min": 4,
+      "jaccard": 0.966,
+      "equal": false,
+      "wayback_records": 56,
+      "archive_records": 58
+    },
+    {
+      "wayback_ts": "20220610162357",
+      "status": "compared",
+      "delta_min": 24,
+      "jaccard": 0.85,
+      "equal": false,
+      "wayback_records": 17,
+      "archive_records": 20
+    },
+    {
+      "wayback_ts": "20220704034323",
+      "status": "compared",
+      "delta_min": 17,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 18,
+      "archive_records": 18
+    },
+    {
+      "wayback_ts": "20220705182354",
+      "status": "compared",
+      "delta_min": 36,
+      "jaccard": 0.736,
+      "equal": false,
+      "wayback_records": 441,
+      "archive_records": 455
+    },
+    {
+      "wayback_ts": "20220708103838",
+      "status": "compared",
+      "delta_min": 21,
+      "jaccard": 0.992,
+      "equal": false,
+      "wayback_records": 260,
+      "archive_records": 258
+    },
+    {
+      "wayback_ts": "20220728212530",
+      "status": "compared",
+      "delta_min": 25,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 110,
+      "archive_records": 110
+    },
+    {
+      "wayback_ts": "20220805171400",
+      "status": "compared",
+      "delta_min": 14,
+      "jaccard": 0.752,
+      "equal": false,
+      "wayback_records": 97,
+      "archive_records": 94
+    },
+    {
+      "wayback_ts": "20220925091021",
+      "status": "compared",
+      "delta_min": 10,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 8,
+      "archive_records": 8
+    },
+    {
+      "wayback_ts": "20220926170614",
+      "status": "compared",
+      "delta_min": 6,
+      "jaccard": 0.907,
+      "equal": false,
+      "wayback_records": 97,
+      "archive_records": 88
+    },
+    {
+      "wayback_ts": "20221002110248",
+      "status": "compared",
+      "delta_min": 3,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 20,
+      "archive_records": 20
+    },
+    {
+      "wayback_ts": "20221003130928",
+      "status": "compared",
+      "delta_min": 9,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 103,
+      "archive_records": 103
+    },
+    {
+      "wayback_ts": "20221006045911",
+      "status": "compared",
+      "delta_min": 59,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 119,
+      "archive_records": 119
+    },
+    {
+      "wayback_ts": "20221017125413",
+      "status": "compared",
+      "delta_min": 6,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 97,
+      "archive_records": 97
+    },
+    {
+      "wayback_ts": "20221017165526",
+      "status": "compared",
+      "delta_min": 5,
+      "jaccard": 0.99,
+      "equal": false,
+      "wayback_records": 104,
+      "archive_records": 103
+    },
+    {
+      "wayback_ts": "20221119123736",
+      "status": "compared",
+      "delta_min": 22,
+      "jaccard": 0.684,
+      "equal": false,
+      "wayback_records": 271,
+      "archive_records": 236
+    },
+    {
+      "wayback_ts": "20221127093158",
+      "status": "compared",
+      "delta_min": 28,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 78,
+      "archive_records": 78
+    },
+    {
+      "wayback_ts": "20221128202242",
+      "status": "compared",
+      "delta_min": 23,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 155,
+      "archive_records": 155
+    },
+    {
+      "wayback_ts": "20221228142446",
+      "status": "compared",
+      "delta_min": 25,
+      "jaccard": 0.837,
+      "equal": false,
+      "wayback_records": 117,
+      "archive_records": 109
+    },
+    {
+      "wayback_ts": "20230128153529",
+      "status": "compared",
+      "delta_min": 35,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 11,
+      "archive_records": 11
+    },
+    {
+      "wayback_ts": "20230129180836",
+      "status": "compared",
+      "delta_min": 9,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 7,
+      "archive_records": 7
+    },
+    {
+      "wayback_ts": "20230203012808",
+      "status": "compared",
+      "delta_min": 28,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 36,
+      "archive_records": 36
+    },
+    {
+      "wayback_ts": "20230307061434",
+      "status": "compared",
+      "delta_min": 45,
+      "jaccard": 0.675,
+      "equal": false,
+      "wayback_records": 27,
+      "archive_records": 40
+    },
+    {
+      "wayback_ts": "20230322194859",
+      "status": "compared",
+      "delta_min": 11,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 153,
+      "archive_records": 153
+    },
+    {
+      "wayback_ts": "20230528135858",
+      "status": "compared",
+      "delta_min": 1,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 40,
+      "archive_records": 40
+    },
+    {
+      "wayback_ts": "20230606033333",
+      "status": "compared",
+      "delta_min": 26,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 10,
+      "archive_records": 10
+    },
+    {
+      "wayback_ts": "20230623141703",
+      "status": "compared",
+      "delta_min": 43,
+      "jaccard": 0.701,
+      "equal": false,
+      "wayback_records": 57,
+      "archive_records": 57
+    },
+    {
+      "wayback_ts": "20230628044820",
+      "status": "compared",
+      "delta_min": 48,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 82,
+      "archive_records": 82
+    },
+    {
+      "wayback_ts": "20230629024847",
+      "status": "compared",
+      "delta_min": 71,
+      "jaccard": 0.978,
+      "equal": false,
+      "wayback_records": 46,
+      "archive_records": 45
+    },
+    {
+      "wayback_ts": "20230629062720",
+      "status": "compared",
+      "delta_min": 27,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 49,
+      "archive_records": 49
+    },
+    {
+      "wayback_ts": "20230702131713",
+      "status": "compared",
+      "delta_min": 17,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 89,
+      "archive_records": 89
+    },
+    {
+      "wayback_ts": "20230707173957",
+      "status": "compared",
+      "delta_min": 20,
+      "jaccard": 0.613,
+      "equal": false,
+      "wayback_records": 25,
+      "archive_records": 25
+    },
+    {
+      "wayback_ts": "20230721145114",
+      "status": "compared",
+      "delta_min": 9,
+      "jaccard": 0.9,
+      "equal": false,
+      "wayback_records": 38,
+      "archive_records": 38
+    },
+    {
+      "wayback_ts": "20230721155652",
+      "status": "compared",
+      "delta_min": 57,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 38,
+      "archive_records": 38
+    },
+    {
+      "wayback_ts": "20230801185058",
+      "status": "compared",
+      "delta_min": 9,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 415,
+      "archive_records": 415
+    },
+    {
+      "wayback_ts": "20230801230806",
+      "status": "compared",
+      "delta_min": 68,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 413,
+      "archive_records": 413
+    },
+    {
+      "wayback_ts": "20230807090805",
+      "status": "no_archive_within_6h",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null,
+      "wayback_records": 474
+    },
+    {
+      "wayback_ts": "20230819143557",
+      "status": "compared",
+      "delta_min": 24,
+      "jaccard": 0.997,
+      "equal": false,
+      "wayback_records": 323,
+      "archive_records": 324
+    },
+    {
+      "wayback_ts": "20230821080739",
+      "status": "compared",
+      "delta_min": 8,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 329,
+      "archive_records": 329
+    },
+    {
+      "wayback_ts": "20230821091008",
+      "status": "compared",
+      "delta_min": 10,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 326,
+      "archive_records": 326
+    },
+    {
+      "wayback_ts": "20230823002416",
+      "status": "compared",
+      "delta_min": 84,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 73,
+      "archive_records": 73
+    },
+    {
+      "wayback_ts": "20230914042241",
+      "status": "compared",
+      "delta_min": 23,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 160,
+      "archive_records": 160
+    },
+    {
+      "wayback_ts": "20230920050135",
+      "status": "compared",
+      "delta_min": 2,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 89,
+      "archive_records": 89
+    },
+    {
+      "wayback_ts": "20230920125555",
+      "status": "compared",
+      "delta_min": 4,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 69,
+      "archive_records": 69
+    },
+    {
+      "wayback_ts": "20230925140235",
+      "status": "compared",
+      "delta_min": 57,
+      "jaccard": 0.826,
+      "equal": false,
+      "wayback_records": 46,
+      "archive_records": 38
+    },
+    {
+      "wayback_ts": "20230930170655",
+      "status": "compared",
+      "delta_min": 7,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 29,
+      "archive_records": 29
+    },
+    {
+      "wayback_ts": "20231021053649",
+      "status": "compared",
+      "delta_min": 23,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 31,
+      "archive_records": 31
+    },
+    {
+      "wayback_ts": "20231030135455",
+      "status": "compared",
+      "delta_min": 55,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 134,
+      "archive_records": 134
+    },
+    {
+      "wayback_ts": "20231105173857",
+      "status": "compared",
+      "delta_min": 21,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 41,
+      "archive_records": 41
+    },
+    {
+      "wayback_ts": "20231122190513",
+      "status": "compared",
+      "delta_min": 5,
+      "jaccard": 0.99,
+      "equal": false,
+      "wayback_records": 193,
+      "archive_records": 191
+    },
+    {
+      "wayback_ts": "20240109120744",
+      "status": "compared",
+      "delta_min": 8,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 262,
+      "archive_records": 262
+    },
+    {
+      "wayback_ts": "20240109141037",
+      "status": "compared",
+      "delta_min": 11,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 264,
+      "archive_records": 264
+    },
+    {
+      "wayback_ts": "20240109165525",
+      "status": "compared",
+      "delta_min": 5,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 261,
+      "archive_records": 261
+    },
+    {
+      "wayback_ts": "20240116152504",
+      "status": "compared",
+      "delta_min": 35,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 74,
+      "archive_records": 74
+    },
+    {
+      "wayback_ts": "20240121145029",
+      "status": "compared",
+      "delta_min": 10,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 6,
+      "archive_records": 6
+    },
+    {
+      "wayback_ts": "20240122105356",
+      "status": "compared",
+      "delta_min": 6,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 20,
+      "archive_records": 20
+    },
+    {
+      "wayback_ts": "20240122120830",
+      "status": "compared",
+      "delta_min": 8,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 20,
+      "archive_records": 20
+    },
+    {
+      "wayback_ts": "20240122171734",
+      "status": "compared",
+      "delta_min": 78,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 11,
+      "archive_records": 11
+    },
+    {
+      "wayback_ts": "20240226151223",
+      "status": "compared",
+      "delta_min": 12,
+      "jaccard": 0.929,
+      "equal": false,
+      "wayback_records": 66,
+      "archive_records": 69
+    },
+    {
+      "wayback_ts": "20240303200635",
+      "status": "compared",
+      "delta_min": 7,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 19,
+      "archive_records": 19
+    },
+    {
+      "wayback_ts": "20240422115415",
+      "status": "compared",
+      "delta_min": 6,
+      "jaccard": 0.634,
+      "equal": false,
+      "wayback_records": 92,
+      "archive_records": 91
+    },
+    {
+      "wayback_ts": "20240422125322",
+      "status": "compared",
+      "delta_min": 7,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 97,
+      "archive_records": 97
+    },
+    {
+      "wayback_ts": "20240423125254",
+      "status": "compared",
+      "delta_min": 7,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 77,
+      "archive_records": 77
+    },
+    {
+      "wayback_ts": "20240423220828",
+      "status": "compared",
+      "delta_min": 8,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 224,
+      "archive_records": 224
+    },
+    {
+      "wayback_ts": "20240424113536",
+      "status": "compared",
+      "delta_min": 24,
+      "jaccard": 0.989,
+      "equal": false,
+      "wayback_records": 90,
+      "archive_records": 89
+    },
+    {
+      "wayback_ts": "20240424160932",
+      "status": "compared",
+      "delta_min": 10,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 81,
+      "archive_records": 81
+    },
+    {
+      "wayback_ts": "20240430115315",
+      "status": "compared",
+      "delta_min": 7,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 95,
+      "archive_records": 95
+    },
+    {
+      "wayback_ts": "20240510234327",
+      "status": "compared",
+      "delta_min": 103,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 43,
+      "archive_records": 43
+    },
+    {
+      "wayback_ts": "20240521125759",
+      "status": "compared",
+      "delta_min": 2,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 135,
+      "archive_records": 135
+    },
+    {
+      "wayback_ts": "20240523040106",
+      "status": "compared",
+      "delta_min": 59,
+      "jaccard": 0.967,
+      "equal": false,
+      "wayback_records": 119,
+      "archive_records": 123
+    },
+    {
+      "wayback_ts": "20240601100328",
+      "status": "compared",
+      "delta_min": 3,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 14,
+      "archive_records": 14
+    },
+    {
+      "wayback_ts": "20240616094439",
+      "status": "compared",
+      "delta_min": 45,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 13,
+      "archive_records": 13
+    },
+    {
+      "wayback_ts": "20240625120938",
+      "status": "compared",
+      "delta_min": 10,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 50,
+      "archive_records": 50
+    },
+    {
+      "wayback_ts": "20240722145313",
+      "status": "compared",
+      "delta_min": 67,
+      "jaccard": 0.973,
+      "equal": false,
+      "wayback_records": 111,
+      "archive_records": 108
+    },
+    {
+      "wayback_ts": "20240729130955",
+      "status": "compared",
+      "delta_min": 10,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 62,
+      "archive_records": 62
+    },
+    {
+      "wayback_ts": "20240805163936",
+      "status": "compared",
+      "delta_min": 20,
+      "jaccard": 0.784,
+      "equal": false,
+      "wayback_records": 92,
+      "archive_records": 106
+    },
+    {
+      "wayback_ts": "20240827144012",
+      "status": "compared",
+      "delta_min": 20,
+      "jaccard": 0.998,
+      "equal": false,
+      "wayback_records": 403,
+      "archive_records": 404
+    },
+    {
+      "wayback_ts": "20240827150739",
+      "status": "compared",
+      "delta_min": 8,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 404,
+      "archive_records": 404
+    },
+    {
+      "wayback_ts": "20240827151157",
+      "status": "compared",
+      "delta_min": 12,
+      "jaccard": 0.944,
+      "equal": false,
+      "wayback_records": 428,
+      "archive_records": 404
+    },
+    {
+      "wayback_ts": "20240827153809",
+      "status": "compared",
+      "delta_min": 22,
+      "jaccard": 0.923,
+      "equal": false,
+      "wayback_records": 389,
+      "archive_records": 361
+    },
+    {
+      "wayback_ts": "20240828105404",
+      "status": "compared",
+      "delta_min": 114,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 291,
+      "archive_records": 291
+    },
+    {
+      "wayback_ts": "20240912175123",
+      "status": "compared",
+      "delta_min": 9,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 74,
+      "archive_records": 74
+    },
+    {
+      "wayback_ts": "20240913122614",
+      "status": "compared",
+      "delta_min": 26,
+      "jaccard": 0.628,
+      "equal": false,
+      "wayback_records": 35,
+      "archive_records": 35
+    },
+    {
+      "wayback_ts": "20240914135158",
+      "status": "compared",
+      "delta_min": 68,
+      "jaccard": 0.955,
+      "equal": false,
+      "wayback_records": 21,
+      "archive_records": 22
+    },
+    {
+      "wayback_ts": "20240923124045",
+      "status": "compared",
+      "delta_min": 19,
+      "jaccard": 0.984,
+      "equal": false,
+      "wayback_records": 64,
+      "archive_records": 63
+    },
+    {
+      "wayback_ts": "20241109105827",
+      "status": "compared",
+      "delta_min": 2,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 35,
+      "archive_records": 35
+    },
+    {
+      "wayback_ts": "20241117000210",
+      "status": "compared",
+      "delta_min": 62,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 96,
+      "archive_records": 96
+    },
+    {
+      "wayback_ts": "20241117093656",
+      "status": "compared",
+      "delta_min": 23,
+      "jaccard": 0.603,
+      "equal": false,
+      "wayback_records": 113,
+      "archive_records": 113
+    },
+    {
+      "wayback_ts": "20241127203422",
+      "status": "compared",
+      "delta_min": 26,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 276,
+      "archive_records": 276
+    },
+    {
+      "wayback_ts": "20241130164010",
+      "status": "compared",
+      "delta_min": 20,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 344,
+      "archive_records": 344
+    },
+    {
+      "wayback_ts": "20241203025559",
+      "status": "compared",
+      "delta_min": 64,
+      "jaccard": 0.885,
+      "equal": false,
+      "wayback_records": 330,
+      "archive_records": 292
+    },
+    {
+      "wayback_ts": "20241203221337",
+      "status": "compared",
+      "delta_min": 14,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 190,
+      "archive_records": 190
+    },
+    {
+      "wayback_ts": "20241212020434",
+      "status": "compared",
+      "delta_min": 55,
+      "jaccard": 0.874,
+      "equal": false,
+      "wayback_records": 123,
+      "archive_records": 115
+    },
+    {
+      "wayback_ts": "20241218004649",
+      "status": "compared",
+      "delta_min": 73,
+      "jaccard": 0.882,
+      "equal": false,
+      "wayback_records": 153,
+      "archive_records": 135
+    },
+    {
+      "wayback_ts": "20250101101506",
+      "status": "compared",
+      "delta_min": 15,
+      "jaccard": 0.845,
+      "equal": false,
+      "wayback_records": 68,
+      "archive_records": 63
+    },
+    {
+      "wayback_ts": "20250106230446",
+      "status": "wayback_unusable: ParseFailure",
+      "delta_min": null,
+      "jaccard": null,
+      "equal": null
+    },
+    {
+      "wayback_ts": "20250118225845",
+      "status": "compared",
+      "delta_min": 59,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 17,
+      "archive_records": 17
+    },
+    {
+      "wayback_ts": "20250122123324",
+      "status": "compared",
+      "delta_min": 27,
+      "jaccard": 0.94,
+      "equal": false,
+      "wayback_records": 412,
+      "archive_records": 428
+    },
+    {
+      "wayback_ts": "20250127123630",
+      "status": "compared",
+      "delta_min": 24,
+      "jaccard": 0.956,
+      "equal": false,
+      "wayback_records": 283,
+      "archive_records": 294
+    },
+    {
+      "wayback_ts": "20250210085341",
+      "status": "compared",
+      "delta_min": 6,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 33,
+      "archive_records": 33
+    },
+    {
+      "wayback_ts": "20250228054542",
+      "status": "compared",
+      "delta_min": 14,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 10,
+      "archive_records": 10
+    },
+    {
+      "wayback_ts": "20250328063038",
+      "status": "compared",
+      "delta_min": 29,
+      "jaccard": 0.871,
+      "equal": false,
+      "wayback_records": 55,
+      "archive_records": 61
+    },
+    {
+      "wayback_ts": "20250403171100",
+      "status": "compared",
+      "delta_min": 11,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 206,
+      "archive_records": 206
+    },
+    {
+      "wayback_ts": "20250410040925",
+      "status": "compared",
+      "delta_min": 9,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 184,
+      "archive_records": 184
+    },
+    {
+      "wayback_ts": "20250514171632",
+      "status": "compared",
+      "delta_min": 17,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 48,
+      "archive_records": 48
+    },
+    {
+      "wayback_ts": "20250515004743",
+      "status": "compared",
+      "delta_min": 228,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 45,
+      "archive_records": 45
+    },
+    {
+      "wayback_ts": "20250623005536",
+      "status": "compared",
+      "delta_min": 124,
+      "jaccard": 0.99,
+      "equal": false,
+      "wayback_records": 105,
+      "archive_records": 104
+    },
+    {
+      "wayback_ts": "20250624013029",
+      "status": "compared",
+      "delta_min": 90,
+      "jaccard": 0.992,
+      "equal": false,
+      "wayback_records": 236,
+      "archive_records": 236
+    },
+    {
+      "wayback_ts": "20251001120501",
+      "status": "compared",
+      "delta_min": 5,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 84,
+      "archive_records": 84
+    },
+    {
+      "wayback_ts": "20251006164658",
+      "status": "compared",
+      "delta_min": 13,
+      "jaccard": 0.977,
+      "equal": false,
+      "wayback_records": 42,
+      "archive_records": 43
+    },
+    {
+      "wayback_ts": "20251016040854",
+      "status": "compared",
+      "delta_min": 9,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 74,
+      "archive_records": 74
+    },
+    {
+      "wayback_ts": "20251111114244",
+      "status": "compared",
+      "delta_min": 17,
+      "jaccard": 0.983,
+      "equal": false,
+      "wayback_records": 180,
+      "archive_records": 177
+    },
+    {
+      "wayback_ts": "20251116161456",
+      "status": "compared",
+      "delta_min": 45,
+      "jaccard": 0.9,
+      "equal": false,
+      "wayback_records": 29,
+      "archive_records": 28
+    },
+    {
+      "wayback_ts": "20251122183823",
+      "status": "compared",
+      "delta_min": 22,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 3,
+      "archive_records": 3
+    },
+    {
+      "wayback_ts": "20251227061542",
+      "status": "compared",
+      "delta_min": 44,
+      "jaccard": 0.909,
+      "equal": false,
+      "wayback_records": 31,
+      "archive_records": 32
+    },
+    {
+      "wayback_ts": "20251228041618",
+      "status": "compared",
+      "delta_min": 16,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 41,
+      "archive_records": 41
+    },
+    {
+      "wayback_ts": "20260103134847",
+      "status": "compared",
+      "delta_min": 11,
+      "jaccard": 0.846,
+      "equal": false,
+      "wayback_records": 13,
+      "archive_records": 11
+    },
+    {
+      "wayback_ts": "20260110140513",
+      "status": "compared",
+      "delta_min": 101,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 697,
+      "archive_records": 697
+    },
+    {
+      "wayback_ts": "20260111155709",
+      "status": "compared",
+      "delta_min": 95,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 700,
+      "archive_records": 700
+    },
+    {
+      "wayback_ts": "20260127210012",
+      "status": "compared",
+      "delta_min": 3,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 154,
+      "archive_records": 154
+    },
+    {
+      "wayback_ts": "20260131214443",
+      "status": "compared",
+      "delta_min": 8,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 33,
+      "archive_records": 33
+    },
+    {
+      "wayback_ts": "20260202222128",
+      "status": "compared",
+      "delta_min": 44,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 17,
+      "archive_records": 17
+    },
+    {
+      "wayback_ts": "20260205095425",
+      "status": "compared",
+      "delta_min": 4,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 686,
+      "archive_records": 686
+    },
+    {
+      "wayback_ts": "20260308034648",
+      "status": "compared",
+      "delta_min": 134,
+      "jaccard": 0.788,
+      "equal": false,
+      "wayback_records": 31,
+      "archive_records": 28
+    },
+    {
+      "wayback_ts": "20260310194902",
+      "status": "compared",
+      "delta_min": 4,
+      "jaccard": 1.0,
+      "equal": true,
+      "wayback_records": 103,
+      "archive_records": 103
+    },
+    {
+      "wayback_ts": "20260421015141",
+      "status": "compared",
+      "delta_min": 120,
+      "jaccard": 0.889,
+      "equal": false,
+      "wayback_records": 281,
+      "archive_records": 278
+    },
+    {
+      "wayback_ts": "20260503143102",
+      "status": "compared",
+      "delta_min": 13,
+      "jaccard": 0.994,
+      "equal": false,
+      "wayback_records": 153,
+      "archive_records": 154
+    }
+  ]
+}

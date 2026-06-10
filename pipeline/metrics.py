@@ -28,8 +28,8 @@ BUCHAREST = ZoneInfo("Europe/Bucharest")
 
 def pt_universe(harta_html: str) -> set[str]:
     text = open(harta_html, encoding="utf-8", errors="replace").read()
-    names = re.findall(r'"denumire"\s*:\s*"([^"]+)"', text)
-    return {normalize_pt(n)[0] for n in names}
+    from pipeline.parse import harta_points
+    return {normalize_pt(name)[0] for name, _, _ in harta_points(text)}
 
 
 def episode_days(first: str, last: str):

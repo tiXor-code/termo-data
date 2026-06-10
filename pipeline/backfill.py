@@ -18,7 +18,7 @@ from multiprocessing import Pool
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from pipeline.parse import ParseFailure, content_hash, parse_page
+from pipeline.parse import EmptyState, ParseFailure, content_hash, parse_page
 
 BUCHAREST = ZoneInfo("Europe/Bucharest")
 GAP_HOURS = 6  # source silence above this marks open episodes gap_spanned
@@ -51,8 +51,10 @@ def _worker(args: tuple[str, str, bytes]):
     sha, ts, blob = args
     try:
         recs = parse_page(blob)
+    except EmptyState as e:
+        return sha, ts, None, f"empty: {e}"
     except ParseFailure as e:
-        return sha, ts, None, str(e)
+        return sha, ts, None, f"failed: {e}"
     rows = [(r.sector, r.pt_norm, r.severity, r.service, r.cause_class,
              r.cause_raw, r.remediere_raw, r.blocks_count,
              tuple((s[0], s[1]) for s in r.streets)) for r in recs]
@@ -122,12 +124,16 @@ class EpisodeMachine:
 
     def _new(self, key: tuple, info: dict, t: datetime) -> dict:
         pt, service, severity = key
+        # An episode first seen right after archive silence may have started
+        # anywhere inside the gap: flag it like episodes that spanned the gap.
+        opened_after_gap = int(
+            self.prev_t is not None and (t - self.prev_t) > timedelta(hours=GAP_HOURS))
         return dict(pt_norm=pt, sector=info["sector"], service=service, severity=severity,
                     cause_class=info["cause_class"], cause_raw=info["cause_raw"],
                     remediere_last=info["remediere"], blocks_count=info["blocks"],
                     first_seen=t.isoformat(), last_seen=t.isoformat(),
                     started_after=self.prev_t.isoformat() if self.prev_t else None,
-                    ended_before=None, gap_spanned=0,
+                    ended_before=None, gap_spanned=opened_after_gap,
                     streets=set(info["streets"]))
 
     def finish(self):
@@ -137,14 +143,18 @@ class EpisodeMachine:
 
 
 def est_hours(ep: dict) -> float:
+    """Midpoint estimate, with pre/post credit capped at GAP_HOURS/2 so archive
+    silence (e.g. the 251h Aug-2023 gap) cannot smear into episode durations."""
     first = datetime.fromisoformat(ep["first_seen"])
     last = datetime.fromisoformat(ep["last_seen"])
     core = (last - first).total_seconds() / 3600
     pre = post = 0.0
     if ep["started_after"]:
-        pre = (first - datetime.fromisoformat(ep["started_after"])).total_seconds() / 7200
+        pre = min((first - datetime.fromisoformat(ep["started_after"])).total_seconds() / 7200,
+                  GAP_HOURS / 2)
     if ep["ended_before"]:
-        post = (datetime.fromisoformat(ep["ended_before"]) - last).total_seconds() / 7200
+        post = min((datetime.fromisoformat(ep["ended_before"]) - last).total_seconds() / 7200,
+                   GAP_HOURS / 2)
     return round(core + pre + post, 2)
 
 
@@ -161,10 +171,12 @@ def main(archive: str, db_path: str):
             n += 1
             t = datetime.fromisoformat(ts)
             if rows is None:
-                n_failed += 1
+                status = "empty" if h.startswith("empty:") else "failed"
+                if status == "failed":
+                    n_failed += 1
                 db.execute("INSERT INTO parse_failure VALUES (?,?,?)", (sha, ts, h))
                 db.execute("INSERT INTO snapshot (sha,observed_utc,content_hash,n_records,parse_status,changed) VALUES (?,?,?,?,?,0)",
-                           (sha, ts, None, 0, "failed"))
+                           (sha, ts, None, 0, status))
                 continue
             changed = h != prev_hash
             db.execute("INSERT INTO snapshot (sha,observed_utc,content_hash,n_records,parse_status,changed) VALUES (?,?,?,?,?,?)",

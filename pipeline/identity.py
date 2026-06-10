@@ -80,16 +80,14 @@ def walk_registry(repo: str) -> dict[str, dict]:
 
 
 def add_harta(registry: dict[str, dict], harta_html: str):
+    from pipeline.parse import harta_points
     text = open(harta_html, encoding="utf-8", errors="replace").read()
-    for m in re.finditer(
-        r'"stare":.*?"denumire"\s*:\s*"([^"]+)"\s*,\s*"longitudine"\s*:\s*([\d.]+)\s*,\s*"latitudine"\s*:\s*([\d.]+)',
-        text,
-    ):
-        name, lon, lat = m.group(1), float(m.group(2)), float(m.group(3))
+    for name, lat, lon in harta_points(text):
         norm, _, _ = normalize_pt(name)
         entry = registry.setdefault(norm, dict(display=name, lat=None, lon=None,
                                                first_seen="harta", last_seen="harta"))
-        entry["lat"], entry["lon"] = lat, lon
+        if lat is not None and lon is not None:
+            entry["lat"], entry["lon"] = lat, lon
 
 
 def main(db_path: str, prometeu_repo: str, harta_html: str):

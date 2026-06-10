@@ -42,6 +42,12 @@ class ParseFailure(Exception):
     """Page layout did not match any known era. Quarantine the snapshot."""
 
 
+class EmptyState(Exception):
+    """Upstream rendered the 'Nu exista inregistrari' banner (usually a transient
+    upstream glitch, occasionally a real zero). Skipped for episode continuity,
+    but recorded distinctly from real parse failures."""
+
+
 def fold(text: str) -> str:
     """Diacritic-fold + lowercase + collapse whitespace. The join key everything rides on."""
     text = unicodedata.normalize("NFKD", text)
@@ -169,6 +175,8 @@ def parse_page(html_bytes: bytes) -> list[Record]:
 
     candidates = [t for t in doc.xpath("//table") if _header_signature_ok(t)]
     if not candidates:
+        if "nu exista inregistrari" in fold(doc.text_content()):
+            raise EmptyState("upstream returned the empty-records banner")
         raise ParseFailure("no table matched the 5-header signature")
 
     st_tables = [t for t in candidates
@@ -215,3 +223,24 @@ def parse_remediere(raw: str):
         return None
     d, mo, y, h, mi = (int(g) for g in m.groups())
     return f"{y:04d}-{mo:02d}-{d:02d}T{h:02d}:{mi:02d}:00"
+
+
+def harta_points(html_text: str) -> list[tuple[str, float, float]]:
+    """(denumire, lat, lon) for every PT on the map page, JSON-decoded.
+
+    Parses the inline passedFeatures_* arrays with a real JSON parser; regexing
+    raw page text leaves \\uXXXX and \\/ escapes in names (a fifth of all PTs)
+    and silently breaks every downstream join.
+    """
+    import json as _json
+
+    points = []
+    for color in ("verde", "galben", "rosu"):
+        m = re.search(rf"var passedFeatures_{color}\s*=\s*(\[.*?\]);", html_text, re.S)
+        if not m:
+            continue
+        for p in _json.loads(m.group(1)):
+            name = (p.get("denumire") or "").strip()
+            if name:
+                points.append((name, p.get("latitudine"), p.get("longitudine")))
+    return points

@@ -1,0 +1,835 @@
+{
+  "universe_size": 947,
+  "pts_seen_in_outages": 1052,
+  "aliases_applied": 6,
+  "years": {
+    "2021": {
+      "median_days_all_pts": 0,
+      "mean_days_all_pts": 0.4,
+      "pts_with_any_outage": 267,
+      "share_of_universe_hit": 26.4,
+      "episodes": 339,
+      "episodes_by_class": {
+        "programat": 72,
+        "avarie": 257,
+        "unclassified": 10
+      },
+      "unclassified_share_pct": 2.9,
+      "gap_spanned_episodes": 0,
+      "worst_10_pts": [
+        {
+          "pt": "1/3",
+          "sector": 6,
+          "days": 6,
+          "days_avarie": 4,
+          "days_programat": 1,
+          "est_day_equivalents": 1.3
+        },
+        {
+          "pt": "6/2",
+          "sector": 6,
+          "days": 5,
+          "days_avarie": 5,
+          "days_programat": 1,
+          "est_day_equivalents": 2.0
+        },
+        {
+          "pt": "p10 foisor",
+          "sector": 2,
+          "days": 5,
+          "days_avarie": 5,
+          "days_programat": 0,
+          "est_day_equivalents": 1.8
+        },
+        {
+          "pt": "liceul iulia hasdeu",
+          "sector": 2,
+          "days": 4,
+          "days_avarie": 4,
+          "days_programat": 0,
+          "est_day_equivalents": 1.4
+        },
+        {
+          "pt": "10 pantelimon",
+          "sector": 2,
+          "days": 4,
+          "days_avarie": 3,
+          "days_programat": 1,
+          "est_day_equivalents": 1.2
+        },
+        {
+          "pt": "3 ferentari",
+          "sector": 5,
+          "days": 4,
+          "days_avarie": 3,
+          "days_programat": 1,
+          "est_day_equivalents": 1.8
+        },
+        {
+          "pt": "7 mosilor",
+          "sector": 2,
+          "days": 4,
+          "days_avarie": 4,
+          "days_programat": 0,
+          "est_day_equivalents": 1.2
+        },
+        {
+          "pt": "2 fundeni",
+          "sector": 2,
+          "days": 4,
+          "days_avarie": 4,
+          "days_programat": 0,
+          "est_day_equivalents": 1.0
+        },
+        {
+          "pt": "2 rahova",
+          "sector": 5,
+          "days": 4,
+          "days_avarie": 4,
+          "days_programat": 0,
+          "est_day_equivalents": 1.8
+        },
+        {
+          "pt": "4 petre ispirescu",
+          "sector": 5,
+          "days": 4,
+          "days_avarie": 4,
+          "days_programat": 0,
+          "est_day_equivalents": 1.5
+        }
+      ],
+      "worst_10_streets": [
+        {
+          "street": "bld timisoara",
+          "days": 7
+        },
+        {
+          "street": "sos mihai bravu",
+          "days": 7
+        },
+        {
+          "street": "cal rahovei",
+          "days": 6
+        },
+        {
+          "street": "str matei basarab",
+          "days": 5
+        },
+        {
+          "street": "str oborul nou",
+          "days": 5
+        },
+        {
+          "street": "bld 1 mai",
+          "days": 5
+        },
+        {
+          "street": "str drumul taberei",
+          "days": 5
+        },
+        {
+          "street": "bld iuliu maniu",
+          "days": 5
+        },
+        {
+          "street": "cal vitan",
+          "days": 5
+        },
+        {
+          "street": "str brasov",
+          "days": 5
+        }
+      ]
+    },
+    "2022": {
+      "median_days_all_pts": 23,
+      "mean_days_all_pts": 26.5,
+      "pts_with_any_outage": 964,
+      "share_of_universe_hit": 90.5,
+      "episodes": 12356,
+      "episodes_by_class": {
+        "avarie": 9036,
+        "programat": 2685,
+        "unclassified": 635
+      },
+      "unclassified_share_pct": 5.1,
+      "gap_spanned_episodes": 2387,
+      "worst_10_pts": [
+        {
+          "pt": "modul toporasi",
+          "sector": 5,
+          "days": 237,
+          "days_avarie": 42,
+          "days_programat": 199,
+          "est_day_equivalents": 233.7
+        },
+        {
+          "pt": "stb-autobaza titan",
+          "sector": 3,
+          "days": 176,
+          "days_avarie": 176,
+          "days_programat": 0,
+          "est_day_equivalents": 170.5
+        },
+        {
+          "pt": "2 alexandria",
+          "sector": 5,
+          "days": 109,
+          "days_avarie": 81,
+          "days_programat": 24,
+          "est_day_equivalents": 86.0
+        },
+        {
+          "pt": "garoafei",
+          "sector": 5,
+          "days": 109,
+          "days_avarie": 81,
+          "days_programat": 27,
+          "est_day_equivalents": 88.3
+        },
+        {
+          "pt": "soldat croitoru",
+          "sector": 5,
+          "days": 108,
+          "days_avarie": 79,
+          "days_programat": 27,
+          "est_day_equivalents": 83.1
+        },
+        {
+          "pt": "teius",
+          "sector": 5,
+          "days": 108,
+          "days_avarie": 77,
+          "days_programat": 28,
+          "est_day_equivalents": 84.9
+        },
+        {
+          "pt": "1 alexandria",
+          "sector": 5,
+          "days": 107,
+          "days_avarie": 78,
+          "days_programat": 25,
+          "est_day_equivalents": 85.3
+        },
+        {
+          "pt": "8 margeanului",
+          "sector": 5,
+          "days": 106,
+          "days_avarie": 73,
+          "days_programat": 28,
+          "est_day_equivalents": 87.0
+        },
+        {
+          "pt": "8 alexandria",
+          "sector": 5,
+          "days": 104,
+          "days_avarie": 75,
+          "days_programat": 26,
+          "est_day_equivalents": 84.7
+        },
+        {
+          "pt": "6 aviatiei",
+          "sector": 1,
+          "days": 91,
+          "days_avarie": 78,
+          "days_programat": 10,
+          "est_day_equivalents": 68.4
+        }
+      ],
+      "worst_10_streets": [
+        {
+          "street": "str toporasi",
+          "days": 242
+        },
+        {
+          "street": "bld theodor pallady",
+          "days": 226
+        },
+        {
+          "street": "bld iuliu maniu",
+          "days": 211
+        },
+        {
+          "street": "sos mihai bravu",
+          "days": 200
+        },
+        {
+          "street": "sos pantelimon",
+          "days": 186
+        },
+        {
+          "street": "bld timisoara",
+          "days": 176
+        },
+        {
+          "street": "cal 13 septembrie",
+          "days": 175
+        },
+        {
+          "street": "cal grivitei",
+          "days": 168
+        },
+        {
+          "street": "str margeanului",
+          "days": 164
+        },
+        {
+          "street": "str drumul taberei",
+          "days": 159
+        }
+      ]
+    },
+    "2023": {
+      "median_days_all_pts": 28,
+      "mean_days_all_pts": 30.5,
+      "pts_with_any_outage": 935,
+      "share_of_universe_hit": 92.3,
+      "episodes": 13213,
+      "episodes_by_class": {
+        "avarie": 8584,
+        "programat": 3784,
+        "unclassified": 845
+      },
+      "unclassified_share_pct": 6.4,
+      "gap_spanned_episodes": 2188,
+      "worst_10_pts": [
+        {
+          "pt": "modul toporasi",
+          "sector": 5,
+          "days": 190,
+          "days_avarie": 2,
+          "days_programat": 188,
+          "est_day_equivalents": 188.0
+        },
+        {
+          "pt": "24 delfinului",
+          "sector": 2,
+          "days": 117,
+          "days_avarie": 71,
+          "days_programat": 45,
+          "est_day_equivalents": 99.6
+        },
+        {
+          "pt": "clinica sfanta lucia",
+          "sector": 3,
+          "days": 113,
+          "days_avarie": 12,
+          "days_programat": 100,
+          "est_day_equivalents": 109.0
+        },
+        {
+          "pt": "c.c.",
+          "sector": 3,
+          "days": 113,
+          "days_avarie": 12,
+          "days_programat": 100,
+          "est_day_equivalents": 108.9
+        },
+        {
+          "pt": "p. m.",
+          "sector": 3,
+          "days": 113,
+          "days_avarie": 12,
+          "days_programat": 100,
+          "est_day_equivalents": 108.9
+        },
+        {
+          "pt": "floreasca",
+          "sector": 1,
+          "days": 107,
+          "days_avarie": 73,
+          "days_programat": 39,
+          "est_day_equivalents": 62.3
+        },
+        {
+          "pt": "s.m.",
+          "sector": 3,
+          "days": 106,
+          "days_avarie": 5,
+          "days_programat": 100,
+          "est_day_equivalents": 103.9
+        },
+        {
+          "pt": "3 colentina socului",
+          "sector": 2,
+          "days": 101,
+          "days_avarie": 63,
+          "days_programat": 38,
+          "est_day_equivalents": 82.6
+        },
+        {
+          "pt": "1 colentina socului",
+          "sector": 2,
+          "days": 101,
+          "days_avarie": 64,
+          "days_programat": 36,
+          "est_day_equivalents": 82.1
+        },
+        {
+          "pt": "apa nova- sediu cogrm",
+          "sector": 3,
+          "days": 101,
+          "days_avarie": 0,
+          "days_programat": 100,
+          "est_day_equivalents": 99.7
+        }
+      ],
+      "worst_10_streets": [
+        {
+          "street": "sos pantelimon",
+          "days": 228
+        },
+        {
+          "street": "bld iuliu maniu",
+          "days": 202
+        },
+        {
+          "street": "str toporasi",
+          "days": 200
+        },
+        {
+          "street": "sos mihai bravu",
+          "days": 191
+        },
+        {
+          "street": "bld camil ressu",
+          "days": 177
+        },
+        {
+          "street": "cal grivitei",
+          "days": 172
+        },
+        {
+          "street": "sos stefan cel mare",
+          "days": 171
+        },
+        {
+          "street": "sos fundeni",
+          "days": 163
+        },
+        {
+          "street": "str doamna ghica",
+          "days": 162
+        },
+        {
+          "street": "str dreptatii",
+          "days": 159
+        }
+      ]
+    },
+    "2024": {
+      "median_days_all_pts": 25,
+      "mean_days_all_pts": 28.0,
+      "pts_with_any_outage": 949,
+      "share_of_universe_hit": 93.8,
+      "episodes": 13365,
+      "episodes_by_class": {
+        "avarie": 9154,
+        "programat": 3704,
+        "unclassified": 507
+      },
+      "unclassified_share_pct": 3.8,
+      "gap_spanned_episodes": 2845,
+      "worst_10_pts": [
+        {
+          "pt": "modul toporasi",
+          "sector": 5,
+          "days": 210,
+          "days_avarie": 5,
+          "days_programat": 205,
+          "est_day_equivalents": 205.5
+        },
+        {
+          "pt": "3 stefan cel mare",
+          "sector": 2,
+          "days": 90,
+          "days_avarie": 34,
+          "days_programat": 54,
+          "est_day_equivalents": 60.6
+        },
+        {
+          "pt": "barbu vacarescu",
+          "sector": 2,
+          "days": 88,
+          "days_avarie": 31,
+          "days_programat": 55,
+          "est_day_equivalents": 60.3
+        },
+        {
+          "pt": "judetului",
+          "sector": 2,
+          "days": 88,
+          "days_avarie": 47,
+          "days_programat": 41,
+          "est_day_equivalents": 63.4
+        },
+        {
+          "pt": "opanez",
+          "sector": 2,
+          "days": 87,
+          "days_avarie": 49,
+          "days_programat": 38,
+          "est_day_equivalents": 59.8
+        },
+        {
+          "pt": "aleea circului",
+          "sector": 2,
+          "days": 87,
+          "days_avarie": 31,
+          "days_programat": 54,
+          "est_day_equivalents": 60.1
+        },
+        {
+          "pt": "galvani tei",
+          "sector": 2,
+          "days": 87,
+          "days_avarie": 45,
+          "days_programat": 41,
+          "est_day_equivalents": 60.8
+        },
+        {
+          "pt": "plavat",
+          "sector": 6,
+          "days": 86,
+          "days_avarie": 66,
+          "days_programat": 24,
+          "est_day_equivalents": 63.7
+        },
+        {
+          "pt": "4 stefan cel mare",
+          "sector": 2,
+          "days": 83,
+          "days_avarie": 20,
+          "days_programat": 62,
+          "est_day_equivalents": 61.3
+        },
+        {
+          "pt": "luncsoara",
+          "sector": 2,
+          "days": 83,
+          "days_avarie": 25,
+          "days_programat": 58,
+          "est_day_equivalents": 59.9
+        }
+      ],
+      "worst_10_streets": [
+        {
+          "street": "str toporasi",
+          "days": 226
+        },
+        {
+          "street": "sos mihai bravu",
+          "days": 220
+        },
+        {
+          "street": "sos pantelimon",
+          "days": 207
+        },
+        {
+          "street": "spl independentei",
+          "days": 188
+        },
+        {
+          "street": "sos stefan cel mare",
+          "days": 186
+        },
+        {
+          "street": "cal grivitei",
+          "days": 178
+        },
+        {
+          "street": "bld iuliu maniu",
+          "days": 174
+        },
+        {
+          "street": "str drumul taberei",
+          "days": 173
+        },
+        {
+          "street": "bld ion mihalache",
+          "days": 156
+        },
+        {
+          "street": "bld timisoara",
+          "days": 151
+        }
+      ]
+    },
+    "2025": {
+      "median_days_all_pts": 22,
+      "mean_days_all_pts": 27.3,
+      "pts_with_any_outage": 905,
+      "share_of_universe_hit": 91.8,
+      "episodes": 11325,
+      "episodes_by_class": {
+        "avarie": 7881,
+        "programat": 3114,
+        "unclassified": 330
+      },
+      "unclassified_share_pct": 2.9,
+      "gap_spanned_episodes": 2556,
+      "worst_10_pts": [
+        {
+          "pt": "modul toporasi",
+          "sector": 5,
+          "days": 179,
+          "days_avarie": 1,
+          "days_programat": 176,
+          "est_day_equivalents": 176.1
+        },
+        {
+          "pt": "17-18 petricani",
+          "sector": 2,
+          "days": 110,
+          "days_avarie": 72,
+          "days_programat": 40,
+          "est_day_equivalents": 76.4
+        },
+        {
+          "pt": "ramuri tei",
+          "sector": 2,
+          "days": 100,
+          "days_avarie": 60,
+          "days_programat": 43,
+          "est_day_equivalents": 73.6
+        },
+        {
+          "pt": "5 lacul tei",
+          "sector": 2,
+          "days": 99,
+          "days_avarie": 61,
+          "days_programat": 40,
+          "est_day_equivalents": 73.5
+        },
+        {
+          "pt": "7 colentina",
+          "sector": 2,
+          "days": 96,
+          "days_avarie": 39,
+          "days_programat": 59,
+          "est_day_equivalents": 76.1
+        },
+        {
+          "pt": "1 teiul doamnei",
+          "sector": 2,
+          "days": 94,
+          "days_avarie": 46,
+          "days_programat": 46,
+          "est_day_equivalents": 63.6
+        },
+        {
+          "pt": "icb",
+          "sector": 2,
+          "days": 93,
+          "days_avarie": 55,
+          "days_programat": 40,
+          "est_day_equivalents": 71.2
+        },
+        {
+          "pt": "3 cheile zanoagei",
+          "sector": 2,
+          "days": 92,
+          "days_avarie": 44,
+          "days_programat": 47,
+          "est_day_equivalents": 67.3
+        },
+        {
+          "pt": "3 fundeni",
+          "sector": 2,
+          "days": 91,
+          "days_avarie": 51,
+          "days_programat": 42,
+          "est_day_equivalents": 71.6
+        },
+        {
+          "pt": "3 tineretului",
+          "sector": 4,
+          "days": 90,
+          "days_avarie": 77,
+          "days_programat": 13,
+          "est_day_equivalents": 67.9
+        }
+      ],
+      "worst_10_streets": [
+        {
+          "street": "str toporasi",
+          "days": 193
+        },
+        {
+          "street": "sos colentina",
+          "days": 187
+        },
+        {
+          "street": "str doamna ghica",
+          "days": 186
+        },
+        {
+          "street": "sos pantelimon",
+          "days": 181
+        },
+        {
+          "street": "str teiul doamnei",
+          "days": 169
+        },
+        {
+          "street": "spl independentei",
+          "days": 168
+        },
+        {
+          "street": "sos mihai bravu",
+          "days": 167
+        },
+        {
+          "street": "bld timisoara",
+          "days": 166
+        },
+        {
+          "street": "bld iuliu maniu",
+          "days": 160
+        },
+        {
+          "street": "bld camil ressu",
+          "days": 159
+        }
+      ]
+    },
+    "2026": {
+      "median_days_all_pts": 8,
+      "mean_days_all_pts": 10.1,
+      "pts_with_any_outage": 840,
+      "share_of_universe_hit": 86.2,
+      "episodes": 4627,
+      "episodes_by_class": {
+        "avarie": 3155,
+        "programat": 1354,
+        "unclassified": 118
+      },
+      "unclassified_share_pct": 2.6,
+      "gap_spanned_episodes": 1271,
+      "worst_10_pts": [
+        {
+          "pt": "modul toporasi",
+          "sector": 5,
+          "days": 57,
+          "days_avarie": 1,
+          "days_programat": 56,
+          "est_day_equivalents": 55.7
+        },
+        {
+          "pt": "sincai",
+          "sector": 4,
+          "days": 52,
+          "days_avarie": 28,
+          "days_programat": 25,
+          "est_day_equivalents": 37.7
+        },
+        {
+          "pt": "2 vacaresti",
+          "sector": 4,
+          "days": 51,
+          "days_avarie": 44,
+          "days_programat": 7,
+          "est_day_equivalents": 39.9
+        },
+        {
+          "pt": "4 lanariei",
+          "sector": 4,
+          "days": 49,
+          "days_avarie": 22,
+          "days_programat": 27,
+          "est_day_equivalents": 36.6
+        },
+        {
+          "pt": "norilor",
+          "sector": 4,
+          "days": 47,
+          "days_avarie": 21,
+          "days_programat": 26,
+          "est_day_equivalents": 36.2
+        },
+        {
+          "pt": "1 tineretului",
+          "sector": 4,
+          "days": 47,
+          "days_avarie": 20,
+          "days_programat": 28,
+          "est_day_equivalents": 36.4
+        },
+        {
+          "pt": "2 lanariei",
+          "sector": 4,
+          "days": 45,
+          "days_avarie": 19,
+          "days_programat": 27,
+          "est_day_equivalents": 36.4
+        },
+        {
+          "pt": "2 tineretului",
+          "sector": 4,
+          "days": 45,
+          "days_avarie": 17,
+          "days_programat": 28,
+          "est_day_equivalents": 35.7
+        },
+        {
+          "pt": "3 tineretului",
+          "sector": 4,
+          "days": 44,
+          "days_avarie": 22,
+          "days_programat": 22,
+          "est_day_equivalents": 34.8
+        },
+        {
+          "pt": "plugarilor",
+          "sector": 4,
+          "days": 43,
+          "days_avarie": 29,
+          "days_programat": 14,
+          "est_day_equivalents": 30.6
+        }
+      ],
+      "worst_10_streets": [
+        {
+          "street": "sos pantelimon",
+          "days": 85
+        },
+        {
+          "street": "bld iuliu maniu",
+          "days": 80
+        },
+        {
+          "street": "sos mihai bravu",
+          "days": 80
+        },
+        {
+          "street": "bld timisoara",
+          "days": 78
+        },
+        {
+          "street": "cal vacaresti",
+          "days": 77
+        },
+        {
+          "street": "spl independentei",
+          "days": 70
+        },
+        {
+          "street": "str drumul taberei",
+          "days": 66
+        },
+        {
+          "street": "str toporasi",
+          "days": 64
+        },
+        {
+          "street": "sos colentina",
+          "days": 64
+        },
+        {
+          "street": "str v. v. stanciu",
+          "days": 62
+        }
+      ]
+    }
+  }
+}
