@@ -18,7 +18,7 @@ from lxml import html as lxml_html
 HEADER_TOKENS = ("sector", "zone", "agent", "cauza", "data")
 
 PT_SPLIT_RE = re.compile(r"punct\s+termic\s*:", re.I)
-PT_NAME_RE = re.compile(r"^\s*(.*?)\s*(?:--?|–|—)\s*(\d+)\s*(blocuri|imobile|blocuri/imobile)", re.S)
+PT_NAME_RE = re.compile(r"^\s*(.*?)\s*(?:--?|–|—)\s*(\d+)\s*(blocuri/imobile|blocuri|imobile)", re.S)
 BULLET_RE = re.compile(r"[•]|&bull;")
 SEVERITY_RE = re.compile(r"\b(oprire|deficient[ae]?)\b", re.I)
 SERVICE_RE = re.compile(r"\b(acc|inc)\b", re.I)
@@ -29,10 +29,12 @@ STREET_TYPE_RE = re.compile(
     re.I,
 )
 
-AVARIE_KEYWORDS = ("avari", "remedier", "spartur", "fisur", "neetans", "defect", "pierder")
+AVARIE_KEYWORDS = ("avari", "remedier", "spartur", "fisur", "neetans", "defect",
+                   "pierder", "lipsa tensiune")
 PROGRAMAT_KEYWORDS = (
     "moderniz", "reabilit", "revizi", "izolare", "lucrar", "montare",
     "inlocuir", "retehnologiz", "racordare", "probe", "extindere",
+    "mentenan", "curatat", "curatare", "spalare",
 )
 
 
@@ -117,8 +119,11 @@ def parse_street_line(line: str) -> tuple[str, str, str] | None:
     stype = fold(m.group(1)) if m else ""
     name = street_raw[m.end():] if m else street_raw
     norm = fold(name)
-    if not norm:
-        return None
+    norm = norm.lstrip("/- .")
+    if not norm or not re.search(r"[a-z]{2}", norm) or norm in (
+        "imobil", "imobile", "bl", "blocuri", "nr", "blocuri/imobile",
+    ):
+        return None  # guard against '/imobile'-class list-suffix junk
     return norm, stype, blocks_raw.strip()
 
 

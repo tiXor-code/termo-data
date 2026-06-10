@@ -39,6 +39,10 @@ CREATE TABLE IF NOT EXISTS street_pt (
   street_norm TEXT, street_type TEXT, pt_norm TEXT, times_seen INT,
   PRIMARY KEY (street_norm, street_type, pt_norm)
 );
+CREATE TABLE IF NOT EXISTS episode_street (
+  episode_id INT, street_norm TEXT, street_type TEXT,
+  PRIMARY KEY (episode_id, street_norm, street_type)
+);
 CREATE TABLE IF NOT EXISTS parse_failure (sha TEXT, observed_utc TEXT, error TEXT);
 """
 
@@ -105,6 +109,7 @@ class EpisodeMachine:
                 ep["last_seen"] = t.isoformat()
                 ep["remediere_last"] = info["remediere"]
                 ep["blocks_count"] = max(ep["blocks_count"] or 0, info["blocks"] or 0) or None
+                ep["streets"].update(info["streets"])
         for key, info in present.items():
             if key not in self.open:
                 self.open[key] = self._new(key, info, t)
@@ -122,7 +127,8 @@ class EpisodeMachine:
                     remediere_last=info["remediere"], blocks_count=info["blocks"],
                     first_seen=t.isoformat(), last_seen=t.isoformat(),
                     started_after=self.prev_t.isoformat() if self.prev_t else None,
-                    ended_before=None, gap_spanned=0)
+                    ended_before=None, gap_spanned=0,
+                    streets=set(info["streets"]))
 
     def finish(self):
         for ep in self.open.values():
@@ -173,8 +179,12 @@ def main(archive: str, db_path: str):
                 cur = present.get(key)
                 # concurrent same-key rows: keep avarie over programat, note both later
                 if cur is None or (cclass == "avarie" and cur["cause_class"] != "avarie"):
+                    streets_prev = cur["streets"] if cur else set()
                     present[key] = dict(sector=sector, cause_class=cclass, cause_raw=craw,
-                                        remediere=rem, blocks=blocks)
+                                        remediere=rem, blocks=blocks,
+                                        streets=streets_prev | set(st))
+                else:
+                    cur["streets"].update(st)
                 for snorm, stype in st:
                     streets[(snorm, stype, pt)] = streets.get((snorm, stype, pt), 0) + 1
             machine.step(t, present)
@@ -182,16 +192,22 @@ def main(archive: str, db_path: str):
                 print(f"  {n} snapshots, {len(machine.closed)} episodes closed", flush=True)
 
     machine.finish()
+    cur = db.cursor()
+    street_rows = []
     for ep in machine.closed:
         ep["est_hours"] = est_hours(ep)
-    db.executemany(
-        """INSERT INTO episode (pt_norm,sector,service,severity,cause_class,cause_raw,
-           remediere_last,blocks_count,first_seen,last_seen,started_after,ended_before,
-           gap_spanned,est_hours) VALUES (:pt_norm,:sector,:service,:severity,:cause_class,
-           :cause_raw,:remediere_last,:blocks_count,:first_seen,:last_seen,:started_after,
-           :ended_before,:gap_spanned,:est_hours)""",
-        machine.closed,
-    )
+        cur.execute(
+            """INSERT INTO episode (pt_norm,sector,service,severity,cause_class,cause_raw,
+               remediere_last,blocks_count,first_seen,last_seen,started_after,ended_before,
+               gap_spanned,est_hours) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (ep["pt_norm"], ep["sector"], ep["service"], ep["severity"], ep["cause_class"],
+             ep["cause_raw"], ep["remediere_last"], ep["blocks_count"], ep["first_seen"],
+             ep["last_seen"], ep["started_after"], ep["ended_before"], ep["gap_spanned"],
+             ep["est_hours"]),
+        )
+        eid = cur.lastrowid
+        street_rows += [(eid, s[0], s[1]) for s in ep["streets"]]
+    db.executemany("INSERT OR IGNORE INTO episode_street VALUES (?,?,?)", street_rows)
     db.executemany("INSERT OR REPLACE INTO street_pt VALUES (?,?,?,?)",
                    [(k[0], k[1], k[2], v) for k, v in streets.items()])
     db.commit()
