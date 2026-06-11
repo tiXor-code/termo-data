@@ -85,6 +85,12 @@ One JSON object per line per PT ever seen (universe + standalone entities):
 episodes clipped to the year; ongoing = ended_before null; uncertain =
 gap_spanned. Timestamps local Bucharest, minute precision.
 
+Run `cause_class` takes one of FOUR values: `avarie`, `programat`,
+`unclassified`, `deficienta`. `deficienta` runs feed the secondary
+`days_deficienta` counter and are NOT part of the headline `days` (the union
+of non-deficienta runs equals `days` for every PT-year and street-year).
+Consumers painting or summing headline days must exclude `deficienta` runs.
+
 ### strazi/all.ndjson.gz
 ```json
 {"slug": "sos-pantelimon", "name": "Sos Pantelimon", "type": "sos",
