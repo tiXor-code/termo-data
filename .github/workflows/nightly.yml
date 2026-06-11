@@ -25,9 +25,18 @@ jobs:
           fetch-depth: 0  # own scraper snapshot history is the post-cutover source
 
       - name: Clone source repos
+        # The backfill only reads archive commits BEFORE the 2026-06-10 cutover
+        # (everything after comes from this repo's own scraper), so the one-time
+        # fork tiXor-code/termoficare-data is permanently sufficient as the
+        # primary - upstream availability is no longer load-bearing. prometeu
+        # freshness is mildly useful (new PT names/coords), so upstream stays
+        # primary there with the fork as fallback; current coords also arrive
+        # via this repo's own data/harta.html either way.
         run: |
-          git clone --single-branch https://github.com/FlorinPopaCodes/termoficare-data archive
-          git clone --single-branch https://github.com/gov2-ro/prometeu prometeu
+          git clone --single-branch https://github.com/tiXor-code/termoficare-data archive || \
+            git clone --single-branch https://github.com/FlorinPopaCodes/termoficare-data archive
+          git clone --single-branch https://github.com/gov2-ro/prometeu prometeu || \
+            git clone --single-branch https://github.com/tiXor-code/prometeu prometeu
 
       - uses: astral-sh/setup-uv@v5
 
