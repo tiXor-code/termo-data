@@ -25,6 +25,8 @@ Modelul de git-scraping este inspirat de
 [FlorinPopaCodes/termoficare-data](https://github.com/FlorinPopaCodes/termoficare-data)
 (arhiva din decembrie 2021 incoace) si [gov2-ro/prometeu](https://github.com/gov2-ro/prometeu).
 
+Limitele sectoarelor (`static/sectoare.geojson`) sunt derivate din OpenStreetMap - (c) [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licenta [ODbL](https://opendatacommons.org/licenses/odbl/).
+
 ## Licenta
 
 Codul: MIT. Datele din `data/` reproduc informatii publice publicate de

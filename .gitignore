@@ -1,5 +1,9 @@
 archive/
+prometeu/
 db/
+web/
+bundle.tar.gz
 __pycache__/
 *.pyc
 .venv/
+.pytest_cache/

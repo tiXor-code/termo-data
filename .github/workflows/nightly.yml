@@ -1,0 +1,93 @@
+# Nightly publish per ARTIFACTS.md packaging section. Ordering is load-bearing:
+# validate runs before the registry commit, the release upload and the deploy
+# hook - a failed invariant leaves yesterday's data-latest bundle and site live.
+name: Nightly publish
+
+on:
+  schedule:
+    - cron: "10 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # own scraper snapshot history is the post-cutover source
+
+      - name: Clone source repos
+        run: |
+          git clone --single-branch https://github.com/FlorinPopaCodes/termoficare-data archive
+          git clone --single-branch https://github.com/gov2-ro/prometeu prometeu
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv sync
+
+      - name: Backfill (full rebuild)
+        run: rm -f db/termo.db && uv run python -m pipeline.backfill archive . db/termo.db
+
+      - name: Identity
+        run: uv run python -m pipeline.identity db/termo.db prometeu data/harta.html
+
+      - name: Publish
+        run: uv run python -m pipeline.publish db/termo.db registry/slugs.json data/harta.html static web
+
+      - name: Validate invariants
+        run: uv run python -m pipeline.validate db/termo.db web data/harta.html
+
+      - name: Commit slug registry growth
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry/slugs.json
+          if git diff --cached --quiet; then
+            echo "registry unchanged"
+          else
+            git commit -m "registry: new slugs $(date -u +%F)"
+            # races the 15-min scraper (separate concurrency group), hence retry;
+            # a push that never lands must fail the run - shipping a bundle whose
+            # slugs were never committed breaks the append-only guarantee
+            pushed=
+            for i in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                pushed=1
+                break
+              fi
+              sleep 20
+            done
+            if [ -z "$pushed" ]; then
+              echo "registry push failed after 3 attempts" >&2
+              exit 1
+            fi
+          fi
+
+      - name: Bundle
+        run: tar -czf bundle.tar.gz -C web .
+
+      - name: Upload rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view data-latest >/dev/null 2>&1 || \
+            gh release create data-latest --title "data-latest" --notes "rolling nightly data bundle"
+          gh release upload data-latest bundle.tar.gz --clobber
+
+      - name: Fire deploy hook
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "no deploy hook set, skipping"
+          else
+            curl -fsS -X POST "$HOOK"
+          fi

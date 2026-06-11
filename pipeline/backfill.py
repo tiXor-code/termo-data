@@ -1,10 +1,18 @@
-"""Backfill: stream the termoficare-data archive into episodes + yearly metrics.
+"""Backfill: stream snapshot history from two sources into episodes + metrics.
 
-Usage: uv run python -m pipeline.backfill <archive_path> <db_path>
+Usage: uv run python -m pipeline.backfill <archive_path> <own_repo_path> <db_path>
+
+Dual-source ingest: the FlorinPopaCodes archive supplies everything strictly
+before CUTOVER_UTC; this repo's own scraper history (data/functionare.html)
+supplies everything at or after it. One EpisodeMachine runs across the seam
+(prev_hash carries over, so an unchanged page at the boundary doesn't churn
+episodes). Timestamps are mixed-offset ISO strings (+02:00/+03:00/Z): always
+compared as aware datetimes, never as strings.
 
 Single pass over `git cat-file --batch` blob stream; parsing fans out to a
 multiprocessing pool (order-preserving imap), the episode state machine and
-SQLite writes stay in the parent process.
+SQLite writes stay in the parent process. Nightly runs are full rebuilds
+(rm -f the db first) - idempotent, no incremental-state bugs.
 """
 
 from __future__ import annotations
@@ -13,7 +21,7 @@ import json
 import sqlite3
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from multiprocessing import Pool
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -22,7 +30,10 @@ from pipeline.parse import EmptyState, ParseFailure, content_hash, parse_page
 
 BUCHAREST = ZoneInfo("Europe/Bucharest")
 GAP_HOURS = 6  # source silence above this marks open episodes gap_spanned
-FILE_PATH = "data/termoficare.html"
+FILE_ARCHIVE = "data/termoficare.html"   # FlorinPopaCodes/termoficare-data
+FILE_OWN = "data/functionare.html"       # this repo's scraper output
+# == meta.json sources_cutover_utc; first own snapshot is 2026-06-10T19:34:39Z
+CUTOVER_UTC = datetime(2026, 6, 10, 19, 34, tzinfo=timezone.utc)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS snapshot (
@@ -61,29 +72,55 @@ def _worker(args: tuple[str, str, bytes]):
     return sha, ts, rows, content_hash(recs)
 
 
-def iter_blobs(archive: Path):
+def iter_blobs(repo: Path, file_path: str):
     log = subprocess.run(
-        ["git", "-C", str(archive), "log", "--first-parent", "--reverse",
-         "--format=%H|%aI", "--", FILE_PATH],
+        ["git", "-C", str(repo), "log", "--first-parent", "--reverse",
+         "--format=%H|%aI", "--", file_path],
         capture_output=True, text=True, check=True,
     ).stdout.splitlines()
     proc = subprocess.Popen(
-        ["git", "-C", str(archive), "cat-file", "--batch"],
+        ["git", "-C", str(repo), "cat-file", "--batch"],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
     )
-    for line in log:
-        sha, ts = line.split("|")
-        proc.stdin.write(f"{sha}:{FILE_PATH}\n".encode())
-        proc.stdin.flush()
-        header = proc.stdout.readline().decode().strip()
-        if header.endswith("missing"):
-            continue
-        size = int(header.split()[-1])
-        blob = proc.stdout.read(size)
-        proc.stdout.read(1)  # trailing newline
+    # finally: iter_dual breaks out of this generator at the cutover on every
+    # nightly run, which would otherwise orphan the cat-file child until exit
+    try:
+        for line in log:
+            sha, ts = line.split("|")
+            proc.stdin.write(f"{sha}:{file_path}\n".encode())
+            proc.stdin.flush()
+            header = proc.stdout.readline().decode().strip()
+            if header.endswith("missing"):
+                continue
+            size = int(header.split()[-1])
+            blob = proc.stdout.read(size)
+            proc.stdout.read(1)  # trailing newline
+            yield sha, ts, blob
+    finally:
+        proc.stdin.close()
+        proc.wait()
+
+
+def iter_dual(archive: Path, own: Path):
+    """Archive blobs strictly before CUTOVER_UTC, then own-repo blobs at or
+    after it. The archive keeps scraping past the cutover - everything >= T is
+    dropped there; pre-cutover own commits (none expected) are skipped. The
+    seam-monotonicity assert also guards against non-monotonic author dates
+    inside the own history (rebases, force-pushes). Keepalive commits touching
+    only data/meta.json never reach the log (path filter)."""
+    last = None
+    for sha, ts, blob in iter_blobs(archive, FILE_ARCHIVE):
+        if datetime.fromisoformat(ts) >= CUTOVER_UTC:
+            break
+        last = datetime.fromisoformat(ts)
         yield sha, ts, blob
-    proc.stdin.close()
-    proc.wait()
+    for sha, ts, blob in iter_blobs(own, FILE_OWN):
+        t = datetime.fromisoformat(ts)
+        if t < CUTOVER_UTC:
+            continue
+        assert last is None or t >= last, f"seam not monotonic: {t} < {last}"
+        last = t
+        yield sha, ts, blob
 
 
 class EpisodeMachine:
@@ -158,7 +195,10 @@ def est_hours(ep: dict) -> float:
     return round(core + pre + post, 2)
 
 
-def main(archive: str, db_path: str):
+def main(archive: str, own_repo: str, db_path: str):
+    # db/ is gitignored, so a fresh checkout (nightly runner) has no parent dir
+    # and sqlite3.connect would fail with "unable to open database file".
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(db_path)
     db.executescript(SCHEMA)
     machine = EpisodeMachine()
@@ -167,7 +207,7 @@ def main(archive: str, db_path: str):
     n = n_failed = 0
 
     with Pool(8) as pool:
-        for sha, ts, rows, h in pool.imap(_worker, iter_blobs(Path(archive)), chunksize=32):
+        for sha, ts, rows, h in pool.imap(_worker, iter_dual(Path(archive), Path(own_repo)), chunksize=32):
             n += 1
             t = datetime.fromisoformat(ts)
             if rows is None:
@@ -228,4 +268,4 @@ def main(archive: str, db_path: str):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])
