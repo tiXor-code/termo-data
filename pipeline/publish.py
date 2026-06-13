@@ -165,7 +165,7 @@ def tokenize_blocks(blocks_raw: str) -> list[str]:
         marker = "imobil" if mk.startswith("imobil") else "nr." if mk.startswith("nr") else "bl."
         s = s[m.end():]
     out, seen = [], set()
-    for tok in s.split(","):
+    for tok in re.split(r"[;,]", s):  # CMTEB separates blocks with both , and ;
         tok = tok.strip().strip(".").strip()
         if not tok or not re.search(r"[0-9A-Za-z]", tok):
             continue

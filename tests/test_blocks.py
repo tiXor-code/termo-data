@@ -21,6 +21,14 @@ def test_tokenize_keeps_ranges_and_codes():
     assert tokenize_blocks("bl. 1-15, D30, 5 sc.F") == ["bl. 1-15", "bl. D30", "bl. 5 sc.F"]
 
 
+def test_tokenize_splits_semicolons_and_drops_empties():
+    # real CMTEB labels: "bl. 2; 34", "bl. 3;", "bl. ; 36 sc.1; 35 sc.1"
+    assert tokenize_blocks("bl. 2; 34") == ["bl. 2", "bl. 34"]
+    assert tokenize_blocks("bl. 3;") == ["bl. 3"]
+    assert tokenize_blocks("bl. ; 36 sc.1; 35 sc.1") == ["bl. 36 sc.1", "bl. 35 sc.1"]
+    assert tokenize_blocks("bl. 22-24; 36 sc.1; 35 sc.1") == ["bl. 22-24", "bl. 36 sc.1", "bl. 35 sc.1"]
+
+
 def test_tokenize_marker_variants():
     assert tokenize_blocks("imobil 39A, 20") == ["imobil 39A", "imobil 20"]
     assert tokenize_blocks("nr. 7, 9") == ["nr. 7", "nr. 9"]
