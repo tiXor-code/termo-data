@@ -235,6 +235,8 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
     load("city/summary.json")
     pt_slugs: set[str] = set()
     st_slugs: set[str] = set()
+    block_pts: set[str] = set()
+    streets_with_blocks = 0
     for ns, rel in (("pt", "pt/all.ndjson.gz"), ("st", "strazi/all.ndjson.gz")):
         p = web / rel
         if not p.exists():
@@ -246,12 +248,19 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
                 for line in f:
                     o = json.loads(line)
                     bag.add(o["slug"])
+                    if ns == "st" and o.get("blocks"):
+                        streets_with_blocks += 1
+                        block_pts.update(b["pt"] for b in o["blocks"])
         except (ValueError, KeyError, OSError) as e:
             out.append((FAIL, "artifact_unparseable", f"{rel}: {e}"))
     inter = pt_slugs & st_slugs
     out.append((FAIL if inter else PASS, "slug_namespaces",
                 f"pt/street slug overlap: {sorted(inter)[:5]}" if inter
                 else f"{len(pt_slugs)} pt + {len(st_slugs)} street slugs disjoint"))
+    unresolved = block_pts - pt_slugs
+    out.append((WARN if unresolved else PASS, "block_pt_resolvable",
+                f"block PTs not in pt set: {sorted(unresolved)[:5]}" if unresolved
+                else f"blocks on {streets_with_blocks} streets, all PTs resolvable"))
 
     rank_bad = []
     for y in years:

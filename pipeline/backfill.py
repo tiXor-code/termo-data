@@ -51,8 +51,8 @@ CREATE TABLE IF NOT EXISTS street_pt (
   PRIMARY KEY (street_norm, street_type, pt_norm)
 );
 CREATE TABLE IF NOT EXISTS episode_street (
-  episode_id INT, street_norm TEXT, street_type TEXT,
-  PRIMARY KEY (episode_id, street_norm, street_type)
+  episode_id INT, street_norm TEXT, street_type TEXT, blocks_raw TEXT,
+  PRIMARY KEY (episode_id, street_norm, street_type, blocks_raw)
 );
 CREATE TABLE IF NOT EXISTS parse_failure (sha TEXT, observed_utc TEXT, error TEXT);
 """
@@ -68,7 +68,7 @@ def _worker(args: tuple[str, str, bytes]):
         return sha, ts, None, f"failed: {e}"
     rows = [(r.sector, r.pt_norm, r.severity, r.service, r.cause_class,
              r.cause_raw, r.remediere_raw, r.blocks_count,
-             tuple((s[0], s[1]) for s in r.streets)) for r in recs]
+             tuple((s[0], s[1], s[2]) for s in r.streets)) for r in recs]
     return sha, ts, rows, content_hash(recs)
 
 
@@ -237,7 +237,7 @@ def main(archive: str, own_repo: str, db_path: str):
                                         streets=streets_prev | set(st))
                 else:
                     cur["streets"].update(st)
-                for snorm, stype in st:
+                for snorm, stype, _blk in st:
                     streets[(snorm, stype, pt)] = streets.get((snorm, stype, pt), 0) + 1
             machine.step(t, present)
             if n % 2000 == 0:
@@ -258,8 +258,8 @@ def main(archive: str, own_repo: str, db_path: str):
              ep["est_hours"]),
         )
         eid = cur.lastrowid
-        street_rows += [(eid, s[0], s[1]) for s in ep["streets"]]
-    db.executemany("INSERT OR IGNORE INTO episode_street VALUES (?,?,?)", street_rows)
+        street_rows += [(eid, s[0], s[1], s[2]) for s in ep["streets"]]
+    db.executemany("INSERT OR IGNORE INTO episode_street VALUES (?,?,?,?)", street_rows)
     db.executemany("INSERT OR REPLACE INTO street_pt VALUES (?,?,?,?)",
                    [(k[0], k[1], k[2], v) for k, v in streets.items()])
     db.commit()

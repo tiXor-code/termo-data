@@ -27,6 +27,7 @@ from __future__ import annotations
 import gzip
 import json
 import math
+import re
 import shutil
 import sqlite3
 import sys
@@ -145,6 +146,38 @@ def street_name(stype: str, snorm: str) -> str:
     """ASCII-only by construction: norms were diacritic-folded at parse."""
     disp = TYPE_DISPLAY.get(stype, stype.capitalize())
     return f"{disp} {snorm.title()}".strip()
+
+
+_BLOCK_MARKER_RE = re.compile(r"^(bl\.?|imobile?|nr\.?)\s*", re.I)
+
+
+def tokenize_blocks(blocks_raw: str) -> list[str]:
+    """'bl. 23, 24, D30' -> ['bl. 23', 'bl. 24', 'bl. D30']. Ranges ('1-15') and
+    prefixed codes ('D30') stay single tokens; the leading marker is normalized
+    and reapplied per token. Best-effort: junk tokens dropped, order preserved."""
+    s = (blocks_raw or "").strip()
+    if not s:
+        return []
+    marker = "bl."
+    m = _BLOCK_MARKER_RE.match(s)
+    if m:
+        mk = m.group(1).lower()
+        marker = "imobil" if mk.startswith("imobil") else "nr." if mk.startswith("nr") else "bl."
+        s = s[m.end():]
+    out, seen = [], set()
+    for tok in s.split(","):
+        tok = tok.strip().strip(".").strip()
+        if not tok or not re.search(r"[0-9A-Za-z]", tok):
+            continue
+        label = f"{marker} {tok}"
+        if label not in seen:
+            seen.add(label)
+            out.append(label)
+    return out
+
+
+def _block_natkey(label: str):
+    return [int(t) if t.isdigit() else t for t in re.findall(r"\d+|\D+", label.lower())]
 
 
 def _rem_iso(raw: str | None) -> str | None:
@@ -312,6 +345,20 @@ def build(db_path: str, registry_path: str, harta_html: str,
         if key in street_keys and pt in pts_set:
             st_pts[key].add(pt)
             pt_sts[pt].add(key)
+
+    # block -> serving-PT index (powers the site's "find your block" finder).
+    # Per street, per block label, count which PT listed it; resolve to the most
+    # frequent PT (ties -> smallest slug, for deterministic output).
+    st_block_pt: dict[tuple, dict[str, Counter]] = defaultdict(lambda: defaultdict(Counter))
+    for stype, snorm, pt0, blk in db.execute(
+            """SELECT es.street_type, es.street_norm, e.pt_norm, es.blocks_raw
+               FROM episode_street es JOIN episode e ON e.id = es.episode_id
+               WHERE e.service='ACC' AND es.blocks_raw IS NOT NULL AND es.blocks_raw <> ''"""):
+        key, pt = (stype, snorm), canon(pt0)
+        if key not in street_keys or pt not in pts_set:
+            continue
+        for label in tokenize_blocks(blk):
+            st_block_pt[key][label][pt] += 1
 
     # --- PT metadata ----------------------------------------------------------
     static = Path(static_dir)
@@ -554,10 +601,16 @@ def build(db_path: str, registry_path: str, harta_html: str,
                 "days_programat": len(st_cls.get((k, y, "programat"), ())),
                 "runs": _runs(st_cls, k, y),
             }
+        blocks = []
+        for label in sorted(st_block_pt.get(k, {}), key=_block_natkey):
+            cnt = st_block_pt[k][label]
+            best = min(cnt, key=lambda p: (-cnt[p], pt_slug[p]))
+            blocks.append({"label": label, "pt": pt_slug[best]})
         st_lines.append({
             "slug": st_slug[k], "name": street_name(*k), "type": k[0],
             "sectors": sorted(st_sectors.get(k, ())),
             "pts": sorted(pt_slug[p] for p in st_pts.get(k, ())),
+            "blocks": blocks,
             "neighbors": neighbors.get(k, []),
             "years": years_obj,
         })

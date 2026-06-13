@@ -95,11 +95,16 @@ Consumers painting or summing headline days must exclude `deficienta` runs.
 ```json
 {"slug": "sos-pantelimon", "name": "Sos Pantelimon", "type": "sos",
  "sectors": [2, 3], "pts": ["pt-7-pantelimon", "..."],
+ "blocks": [{"label": "bl. 23", "pt": "pt-13-pantelimon"}, "..."],
  "neighbors": ["str-x", "str-y"],
  "years": {"2025": {"days": 181, "days_avarie": 121, "days_programat": 74,
    "runs": [[10, 3, "avarie"], "..."]}}}
 ```
 Street days = union of days of episodes that listed the street.
+`blocks` = block-label -> serving-PT-slug, deduped per street, resolved to the
+most frequent PT (ties -> smallest slug); powers the site's "find your block"
+finder. A block can legitimately have been served by different PTs over time;
+only the dominant one is published. Empty array when no block detail was parsed.
 `neighbors` = up to 8 streets sharing a PT.
 
 ### client/search-index.json
