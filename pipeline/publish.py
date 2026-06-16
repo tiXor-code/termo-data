@@ -43,7 +43,35 @@ from pipeline.slugs import SlugRegistry
 CLASSES = ("avarie", "programat", "unclassified", "deficienta")
 TYPE_DISPLAY = {"str": "Str", "bld": "Bld", "cal": "Calea", "spl": "Splaiul",
                 "drm": "Drumul", "sos": "Sos", "intr": "Intr", "al": "Aleea",
-                "pta": "Piata", "prel": "Prel", "": ""}
+                "pta": "Piata", "prel": "Prel", "fnd": "Fundatura", "": ""}
+
+# Canonical street-type words (folded). Unifies CMTEB's leaky parse (where an
+# untriggered type word like "sos"/"ale" stays folded into the norm with type
+# "") with OSM full words ("Soseaua", "Aleea"), so the SAME street fingerprints
+# identically from either source and merges instead of duplicating.
+TYPE_WORDS = {
+    "str": "str", "strada": "str", "stradela": "str",
+    "bld": "bld", "bdul": "bld", "b-dul": "bld", "bulevardul": "bld", "bulevard": "bld",
+    "sos": "sos", "soseaua": "sos", "sosea": "sos",
+    "cal": "cal", "calea": "cal",
+    "spl": "spl", "splaiul": "spl",
+    "drm": "drm", "drumul": "drm", "drum": "drm",
+    "ale": "al", "aleea": "al", "al": "al",
+    "intr": "intr", "intrarea": "intr",
+    "pta": "pta", "piata": "pta",
+    "prel": "prel", "prelungirea": "prel",
+    "fnd": "fnd", "fundatura": "fnd", "fdt": "fnd",
+}
+
+
+def street_fp(stype: str, snorm: str) -> tuple[str, str]:
+    """(canonical_type, core_name) - strips a leading type word wherever it sits
+    (in the type field OR folded into the norm), so CMTEB and OSM forms of the
+    same street collapse to one identity."""
+    toks = f"{stype} {snorm}".split()
+    if toks and toks[0] in TYPE_WORDS:
+        return (TYPE_WORDS[toks[0]], " ".join(toks[1:]))
+    return ("", " ".join(toks))
 
 
 def local(ts: str) -> datetime:
@@ -325,19 +353,35 @@ def build(db_path: str, registry_path: str, harta_html: str,
 
     # --- OSM street universe: every named Bucharest street, so ANY street is
     # searchable even when CMTEB never named it (publish infers a serving PT
-    # for those below). OSM names normalize to the same (norm,type) as the
-    # parser, so a street CMTEB also named merges to one slug, not a duplicate.
-    osm_coord: dict[tuple, tuple[float, float]] = {}
+    # for those below). CMTEB's parser is leaky - an untriggered type word
+    # ("Sos", "Aleea") stays folded into the norm with type "", so a raw
+    # (type,norm) key does NOT match OSM's canonical (type,norm). We match on
+    # the type-stripped FINGERPRINT instead: an OSM street whose fingerprint
+    # equals a CMTEB street's reuses that street (its coords become a geocoding
+    # ANCHOR), and only genuinely-new OSM streets get a fresh identity. So CMTEB
+    # streets keep their exact slug and a street is never duplicated.
+    cmteb_fp: dict[tuple, tuple] = {}
+    for k in street_keys:
+        cmteb_fp[street_fp(*k)] = k  # collision -> any representative is fine
+    street_coord: dict[tuple, tuple[float, float]] = {}  # CMTEB key -> anchor pt
+    new_coord: dict[tuple, tuple[float, float]] = {}     # new OSM key -> coord
     osm_path = Path(static_dir) / "streets.json"
     if osm_path.exists():
         for s in json.loads(osm_path.read_text(encoding="utf-8")):
-            key = (s["type"], s["norm"])
-            osm_coord[key] = (s["lat"], s["lon"])
-            if s.get("sector"):
-                st_sectors[key].add(s["sector"])
+            fp = street_fp(s["type"], s["norm"])
+            coord = (s["lat"], s["lon"])
+            match = cmteb_fp.get(fp)
+            if match is not None:                       # same street CMTEB named
+                street_coord.setdefault(match, coord)   # -> geocoding anchor
+                if s.get("sector"):
+                    st_sectors[match].add(s["sector"])
+            else:                                        # never named -> new id
+                new_coord[fp] = coord                   # identity = fingerprint
+                if s.get("sector"):
+                    st_sectors[fp].add(s["sector"])
     else:
         print("WARN: static/streets.json absent - only CMTEB-named streets searchable")
-    osm_keys = set(osm_coord)
+    osm_keys = set(new_coord)
 
     # --- entities + slugs (PTs first: pt-* namespace has priority) ----------
     acc_pts = {canon(p) for (p,) in db.execute(
@@ -408,7 +452,7 @@ def build(db_path: str, registry_path: str, harta_html: str,
     CELL = 0.012  # ~1.3 km grid cell
     anchor_grid: dict[tuple, list[tuple]] = defaultdict(list)
     for pt in pts_all:
-        pts_anchors = [osm_coord[k] for k in pt_sts.get(pt, ()) if k in osm_coord]
+        pts_anchors = [street_coord[k] for k in pt_sts.get(pt, ()) if k in street_coord]
         if pt in pt_coord:
             pts_anchors.append(pt_coord[pt])
         for (alat, alon) in pts_anchors:
@@ -432,9 +476,9 @@ def build(db_path: str, registry_path: str, harta_html: str,
             r += 1
         return best
 
-    inferred: dict[tuple, tuple] = {}  # street key -> (pt_norm, km)
-    for k in osm_keys - street_keys:
-        res = nearest_anchor(*osm_coord[k])
+    inferred: dict[tuple, tuple] = {}  # new OSM street key -> (pt_norm, km)
+    for k in osm_keys:
+        res = nearest_anchor(*new_coord[k])
         if res:
             inferred[k] = res
 
