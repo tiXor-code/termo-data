@@ -237,6 +237,8 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
     st_slugs: set[str] = set()
     block_pts: set[str] = set()
     streets_with_blocks = 0
+    inferred_pts: set[str] = set()
+    inferred_count = 0
     for ns, rel in (("pt", "pt/all.ndjson.gz"), ("st", "strazi/all.ndjson.gz")):
         p = web / rel
         if not p.exists():
@@ -251,6 +253,9 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
                     if ns == "st" and o.get("blocks"):
                         streets_with_blocks += 1
                         block_pts.update(b["pt"] for b in o["blocks"])
+                    if ns == "st" and o.get("inferred_pt"):
+                        inferred_count += 1
+                        inferred_pts.add(o["inferred_pt"])
         except (ValueError, KeyError, OSError) as e:
             out.append((FAIL, "artifact_unparseable", f"{rel}: {e}"))
     inter = pt_slugs & st_slugs
@@ -261,6 +266,10 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
     out.append((WARN if unresolved else PASS, "block_pt_resolvable",
                 f"block PTs not in pt set: {sorted(unresolved)[:5]}" if unresolved
                 else f"blocks on {streets_with_blocks} streets, all PTs resolvable"))
+    inf_bad = inferred_pts - pt_slugs
+    out.append((FAIL if inf_bad else PASS, "inferred_pt_resolvable",
+                f"inferred PTs not in pt set: {sorted(inf_bad)[:5]}" if inf_bad
+                else f"{inferred_count} OSM-only streets inferred, all PTs resolvable"))
 
     rank_bad = []
     for y in years:

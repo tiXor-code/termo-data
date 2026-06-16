@@ -97,9 +97,18 @@ Consumers painting or summing headline days must exclude `deficienta` runs.
  "sectors": [2, 3], "pts": ["pt-7-pantelimon", "..."],
  "blocks": [{"label": "bl. 23", "pt": "pt-13-pantelimon"}, "..."],
  "neighbors": ["str-x", "str-y"],
+ "inferred_pt": null, "inferred_km": null,
  "years": {"2025": {"days": 181, "days_avarie": 121, "days_programat": 74,
    "runs": [[10, 3, "avarie"], "..."]}}}
 ```
+Street universe = streets CMTEB named in outages UNION all named Bucharest
+streets from OSM (`static/streets.json`, ODbL). OSM-only streets (CMTEB never
+named them) have `years: {}`, `pts: []`, `blocks: []` and an **inferred** serving
+PT: `inferred_pt` (slug) = the PT whose actually-named streets / location are
+geographically closest; `inferred_km` = that distance. The site shows these as
+an ESTIMATE ("zona deservita probabil de ...") and noindexes them. Streets with
+real outage data have `inferred_pt: null`. All streets (named + OSM) appear in
+`client/search-index.json` so any street is searchable.
 Street days = union of days of episodes that listed the street.
 `blocks` = block-label -> serving-PT-slug, deduped per street, resolved to the
 most frequent PT (ties -> smallest slug); powers the site's "find your block"

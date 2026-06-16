@@ -323,11 +323,27 @@ def build(db_path: str, registry_path: str, harta_html: str,
             st_epn[(key, y)] += 1
             st_hours[(key, y)] += est_h * (c / len(days))
 
+    # --- OSM street universe: every named Bucharest street, so ANY street is
+    # searchable even when CMTEB never named it (publish infers a serving PT
+    # for those below). OSM names normalize to the same (norm,type) as the
+    # parser, so a street CMTEB also named merges to one slug, not a duplicate.
+    osm_coord: dict[tuple, tuple[float, float]] = {}
+    osm_path = Path(static_dir) / "streets.json"
+    if osm_path.exists():
+        for s in json.loads(osm_path.read_text(encoding="utf-8")):
+            key = (s["type"], s["norm"])
+            osm_coord[key] = (s["lat"], s["lon"])
+            if s.get("sector"):
+                st_sectors[key].add(s["sector"])
+    else:
+        print("WARN: static/streets.json absent - only CMTEB-named streets searchable")
+    osm_keys = set(osm_coord)
+
     # --- entities + slugs (PTs first: pt-* namespace has priority) ----------
     acc_pts = {canon(p) for (p,) in db.execute(
         "SELECT DISTINCT pt_norm FROM episode WHERE service='ACC'")}
     pts_all = sorted(universe | acc_pts)
-    streets_all = sorted(street_keys)
+    streets_all = sorted(street_keys | osm_keys)
 
     registry = SlugRegistry.load(registry_path)
     pt_slug = {pt: registry.ensure_pt(pt) for pt in pts_all}
@@ -384,6 +400,43 @@ def build(db_path: str, registry_path: str, harta_html: str,
             if s:
                 pt_sector[pt] = s
     nearest = nearest_map({pt_slug[pt]: c for pt, c in pt_coord.items()})
+
+    # --- anchored inference: for a street CMTEB never named, guess its serving
+    # PT as the one whose ACTUALLY-NAMED streets (or own location) are closest.
+    # Anchoring on named streets beats raw nearest-PT-point (district-heating
+    # topology is not nearest-neighbor). Result is shown as an ESTIMATE on-site.
+    CELL = 0.012  # ~1.3 km grid cell
+    anchor_grid: dict[tuple, list[tuple]] = defaultdict(list)
+    for pt in pts_all:
+        pts_anchors = [osm_coord[k] for k in pt_sts.get(pt, ()) if k in osm_coord]
+        if pt in pt_coord:
+            pts_anchors.append(pt_coord[pt])
+        for (alat, alon) in pts_anchors:
+            anchor_grid[(int(alat / CELL), int(alon / CELL))].append((alat, alon, pt))
+
+    def nearest_anchor(lat: float, lon: float):
+        best, found_r = None, None
+        ci, cj = int(lat / CELL), int(lon / CELL)
+        r = 0
+        while r <= 60:
+            for di in range(-r, r + 1):
+                for dj in range(-r, r + 1):
+                    if max(abs(di), abs(dj)) != r:
+                        continue
+                    for (alat, alon, pt) in anchor_grid.get((ci + di, cj + dj), ()):
+                        d = haversine_km((lat, lon), (alat, alon))
+                        if best is None or d < best[1]:
+                            best, found_r = (pt, d), found_r if found_r is not None else r
+            if found_r is not None and r >= found_r + 1:
+                break
+            r += 1
+        return best
+
+    inferred: dict[tuple, tuple] = {}  # street key -> (pt_norm, km)
+    for k in osm_keys - street_keys:
+        res = nearest_anchor(*osm_coord[k])
+        if res:
+            inferred[k] = res
 
     st_days_lcy = {k: len(st_days.get((k, lcy), ())) for k in streets_all}
     neighbors: dict[tuple, list[str]] = {}
@@ -606,12 +659,16 @@ def build(db_path: str, registry_path: str, harta_html: str,
             cnt = st_block_pt[k][label]
             best = min(cnt, key=lambda p: (-cnt[p], pt_slug[p]))
             blocks.append({"label": label, "pt": pt_slug[best]})
+        # OSM-only street (CMTEB never named it) -> attach the inferred PT.
+        inf = inferred.get(k) if not years_obj else None
         st_lines.append({
             "slug": st_slug[k], "name": street_name(*k), "type": k[0],
             "sectors": sorted(st_sectors.get(k, ())),
             "pts": sorted(pt_slug[p] for p in st_pts.get(k, ())),
             "blocks": blocks,
             "neighbors": neighbors.get(k, []),
+            "inferred_pt": pt_slug[inf[0]] if inf else None,
+            "inferred_km": round(inf[1], 2) if inf else None,
             "years": years_obj,
         })
     write_ndjson_gz(out / "strazi" / "all.ndjson.gz", st_lines)
@@ -626,7 +683,10 @@ def build(db_path: str, registry_path: str, harta_html: str,
     for k in sorted(streets_all, key=lambda k: st_slug[k]):
         secs = sorted(st_sectors.get(k, ()))
         sec = secs[0] if len(secs) == 1 else None
+        # OSM-only streets show their inferred PT's days (estimate), not 0.
         d = st_days_lcy[k]
+        if not d and k in inferred:
+            d = len(pt_days.get((inferred[k][0], lcy), ()))
         search.append({"t": "st", "n": street_name(*k), "s": st_slug[k],
                        "sec": sec, "d": d})
         og[st_slug[k]] = ["st", street_name(*k), sec, d, lcy]
