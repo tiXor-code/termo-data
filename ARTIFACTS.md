@@ -98,6 +98,7 @@ Consumers painting or summing headline days must exclude `deficienta` runs.
  "blocks": [{"label": "bl. 23", "pt": "pt-13-pantelimon"}, "..."],
  "neighbors": ["str-x", "str-y"],
  "inferred_pt": null, "inferred_km": null,
+ "addr": {"64": [3, 0.18], "64a": [3, 0.2], "70": [5, 0.42]},
  "years": {"2025": {"days": 181, "days_avarie": 121, "days_programat": 74,
    "runs": [[10, 3, "avarie"], "..."]}}}
 ```
@@ -115,6 +116,15 @@ most frequent PT (ties -> smallest slug); powers the site's "find your block"
 finder. A block can legitimately have been served by different PTs over time;
 only the dominant one is published. Empty array when no block detail was parsed.
 `neighbors` = up to 8 streets sharing a PT.
+`addr` (optional, additive) = `{house_number -> [pt_index, estimate_km]}`. A long
+street is served by many PTs; the house NUMBER picks which one covers that stretch.
+`pt_index` indexes THIS record's `pts` array; `-1` = use `inferred_pt` (OSM-only
+street). Numbers are OSM `addr:housenumber` (folded, lowercased, kept as strings;
+`static/addresses.json.gz`, ODbL) resolved to the **nearest serving PT among the
+street's serving PTs** - shown strictly as a proximity ESTIMATE (no authoritative
+address->PT map exists). `estimate_km` = haversine to that PT's nearest anchor
+(may be null). Coverage is partial; absent/empty when no OSM address matched the
+street -> consumers MUST fall back to street-level.
 
 ### client/search-index.json
 `[{"t": "pt"|"st", "n": "Soseaua Oltenitei", "s": "sos-oltenitei", "sec": 4, "d": 23}]`

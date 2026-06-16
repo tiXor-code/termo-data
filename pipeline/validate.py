@@ -239,6 +239,9 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
     streets_with_blocks = 0
     inferred_pts: set[str] = set()
     inferred_count = 0
+    streets_with_addr = 0
+    addr_numbers = 0
+    addr_bad: list[str] = []
     for ns, rel in (("pt", "pt/all.ndjson.gz"), ("st", "strazi/all.ndjson.gz")):
         p = web / rel
         if not p.exists():
@@ -256,6 +259,17 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
                     if ns == "st" and o.get("inferred_pt"):
                         inferred_count += 1
                         inferred_pts.add(o["inferred_pt"])
+                    if ns == "st" and o.get("addr"):
+                        n_pts = len(o.get("pts") or [])
+                        has_inf = o.get("inferred_pt") is not None
+                        streets_with_addr += 1
+                        for num, val in o["addr"].items():
+                            addr_numbers += 1
+                            idx = val[0] if isinstance(val, list) and val else None
+                            if (not isinstance(idx, int)
+                                    or (idx == -1 and not has_inf)
+                                    or (idx != -1 and not (0 <= idx < n_pts))):
+                                addr_bad.append(f"{o['slug']}:{num}={val}")
         except (ValueError, KeyError, OSError) as e:
             out.append((FAIL, "artifact_unparseable", f"{rel}: {e}"))
     inter = pt_slugs & st_slugs
@@ -270,6 +284,9 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
     out.append((FAIL if inf_bad else PASS, "inferred_pt_resolvable",
                 f"inferred PTs not in pt set: {sorted(inf_bad)[:5]}" if inf_bad
                 else f"{inferred_count} OSM-only streets inferred, all PTs resolvable"))
+    out.append((FAIL if addr_bad else PASS, "addr_resolvable",
+                f"addr pt_index out of range / bad -1: {addr_bad[:5]}" if addr_bad
+                else f"addr maps on {streets_with_addr} streets, {addr_numbers} numbers, all resolvable"))
 
     rank_bad = []
     for y in years:

@@ -121,6 +121,32 @@ def haversine_km(a: tuple[float, float], b: tuple[float, float]) -> float:
     return 2 * 6371.0 * math.asin(math.sqrt(h))
 
 
+def min_anchor_km(lat: float, lon: float, anchors: list) -> float | None:
+    """Distance to the closest of a PT's anchor points (None if it has none)."""
+    best = None
+    for a in anchors:
+        d = haversine_km((lat, lon), a)
+        if best is None or d < best:
+            best = d
+    return best
+
+
+def nearest_serving_index(lat: float, lon: float, serving_anchors: list) -> tuple[int, float | None]:
+    """Pick which serving PT covers an address point: the index (into the
+    street's slug-sorted pts[]) whose nearest anchor is closest. `serving_anchors`
+    is parallel to pts[]; each entry is that PT's anchor coords. Ties resolve to
+    the lower index (callers pass pts in slug order, so smaller slug wins).
+    Falls back to index 0 when no serving PT has a usable anchor."""
+    best_i, best_km = None, None
+    for i, anchors in enumerate(serving_anchors):
+        d = min_anchor_km(lat, lon, anchors)
+        if d is not None and (best_km is None or d < best_km):
+            best_i, best_km = i, d
+    if best_i is None:
+        return 0, None
+    return best_i, round(best_km, 2)
+
+
 def nearest_map(coords: dict[str, tuple[float, float]]) -> dict[str, list[str]]:
     """5 nearest slugs per slug, self excluded. Brute force (<1100 points)."""
     slugs = sorted(coords)
@@ -482,6 +508,50 @@ def build(db_path: str, registry_path: str, harta_html: str,
         if res:
             inferred[k] = res
 
+    # --- per-address serving-PT resolution -----------------------------------
+    # A long street (e.g. Sos Colentina) is served by many PTs; the house NUMBER
+    # decides which one covers that stretch. For each OSM address we pick the
+    # nearest, among the street's KNOWN serving PTs, to the address point - the
+    # same anchors as the inference above, partitioned per serving PT. Shown
+    # strictly as a proximity ESTIMATE (no authoritative address->PT map exists).
+    pt_anchors: dict[str, list[tuple[float, float]]] = {}
+    for pt in pts_all:
+        a = [street_coord[s] for s in pt_sts.get(pt, ()) if s in street_coord]
+        if pt in pt_coord:
+            a.append(pt_coord[pt])
+        pt_anchors[pt] = a
+
+    addr_by_key: dict[tuple, list[tuple]] = defaultdict(list)  # key -> [(num,lat,lon)]
+    addr_path = Path(static_dir) / "addresses.json.gz"
+    if addr_path.exists():
+        fp_to_key = {street_fp(*k): k for k in streets_all}
+        with gzip.open(addr_path, "rt", encoding="utf-8") as f:
+            for row in json.load(f):
+                k = fp_to_key.get(street_fp(row["type"], row["street_norm"]))
+                if k is not None:
+                    addr_by_key[k].append((row["number"], row["lat"], row["lon"]))
+    else:
+        print("WARN: static/addresses.json.gz absent - no per-address resolution")
+
+    # addr_map[k] = {number: [pt_index, km]}; pt_index indexes the street's
+    # published pts[] (slug-sorted, same order emitted below), -1 = use inferred_pt.
+    addr_map: dict[tuple, dict[str, list]] = {}
+    for k, addrs in addr_by_key.items():
+        serving = sorted(st_pts.get(k, ()), key=lambda p: pt_slug[p])
+        out_k: dict[str, list] = {}
+        if serving:  # 1 PT -> trivially index 0; many -> nearest serving PT wins
+            serving_anchors = [pt_anchors[p] for p in serving]
+            for (num, lat, lon) in addrs:
+                idx, km = nearest_serving_index(lat, lon, serving_anchors)
+                out_k[num] = [idx, km]
+        elif k in inferred:  # OSM-only street -> every number inherits inferred_pt
+            ip, ikm = inferred[k]
+            for (num, lat, lon) in addrs:
+                d = min_anchor_km(lat, lon, pt_anchors[ip])
+                out_k[num] = [-1, round(d if d is not None else ikm, 2)]
+        if out_k:
+            addr_map[k] = out_k
+
     st_days_lcy = {k: len(st_days.get((k, lcy), ())) for k in streets_all}
     neighbors: dict[tuple, list[str]] = {}
     for k in streets_all:
@@ -705,6 +775,7 @@ def build(db_path: str, registry_path: str, harta_html: str,
             blocks.append({"label": label, "pt": pt_slug[best]})
         # OSM-only street (CMTEB never named it) -> attach the inferred PT.
         inf = inferred.get(k) if not years_obj else None
+        am = addr_map.get(k)
         st_lines.append({
             "slug": st_slug[k], "name": street_name(*k), "type": k[0],
             "sectors": sorted(st_sectors.get(k, ())),
@@ -713,6 +784,7 @@ def build(db_path: str, registry_path: str, harta_html: str,
             "neighbors": neighbors.get(k, []),
             "inferred_pt": pt_slug[inf[0]] if inf else None,
             "inferred_km": round(inf[1], 2) if inf else None,
+            **({"addr": am} if am else {}),
             "years": years_obj,
         })
     write_ndjson_gz(out / "strazi" / "all.ndjson.gz", st_lines)
@@ -745,6 +817,7 @@ def build(db_path: str, registry_path: str, harta_html: str,
     counters = {
         "pts": len(pts_all), "standalone_pts": len(acc_pts - set(reg_rows)),
         "streets": len(streets_all), "years": len(years),
+        "addressed_streets": len(addr_map), "addr_count": sum(len(v) for v in addr_map.values()),
         "registry_changed": registry_changed,
         "sector_unassigned_universe": sum(1 for pt in universe if pt not in pt_sector),
         "files": len(files), "bytes": sum(p.stat().st_size for p in files),
