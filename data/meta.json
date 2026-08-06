@@ -1,13 +1,13 @@
 {
   "fetch_date_utc": "2026-08-06",
   "functionare.html": {
-    "bytes": 66123,
-    "last_change_utc": "2026-08-06T09:49:26+00:00",
-    "sha256": "ccb3123239fddb7542368595060a08ec34bab1041d269c6919242da1a5da2a6c"
+    "bytes": 63471,
+    "last_change_utc": "2026-08-06T11:54:58+00:00",
+    "sha256": "01d1abc98de1fe7a1d35d7bc44e32fd4b7269af3cb07c0a62e9924dc08669b48"
   },
   "harta.html": {
-    "bytes": 150288,
-    "last_change_utc": "2026-08-06T09:49:26+00:00",
-    "sha256": "b7da3262cc316685311ad26ece55018461b94c7764c949df2d9554cb412ba496"
+    "bytes": 150001,
+    "last_change_utc": "2026-08-06T11:54:58+00:00",
+    "sha256": "5c48739e394f6c941faca09eca85f81c36646fea98f2bc30e06c9cf0c0dcd9b0"
   }
 }
