@@ -42,6 +42,16 @@ jobs:
 
       - run: uv sync
 
+      # Code smoke gate. Placement is deliberate: this runs BEFORE the backfill,
+      # while db/termo.db does not yet exist, so the 15 db-gated tests stay
+      # skipped and only the 36 pure-code tests run (~10s). Moving this AFTER
+      # the backfill would un-gate frozen data constants (universe_size == 947,
+      # median_pt_days == 22) and let a legitimate change in CMTEB's PT universe
+      # block the nightly release, leaving the site silently stale. Data
+      # invariants are pipeline.validate's job, further down.
+      - name: Unit tests (code smoke gate)
+        run: uv run pytest -q
+
       - name: Backfill (full rebuild)
         run: rm -f db/termo.db && uv run python -m pipeline.backfill archive . db/termo.db
 

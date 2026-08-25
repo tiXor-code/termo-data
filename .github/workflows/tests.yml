@@ -1,0 +1,53 @@
+# Code gate for the pipeline. Runs the pytest suite on code changes only.
+#
+# The `paths` allowlist is load-bearing. scrape.yml commits data/ every 15
+# minutes (~21-28 commits/day), and a naive `on: push` would fire on every one
+# of them, burying real failures in the run history. An allowlist is used rather
+# than paths-ignore because a future scraper output directory would silently
+# re-enable that storm under paths-ignore, but stays excluded here.
+#
+# NOTE: 15 of the 51 tests are skipif-gated on a local db/termo.db, which is
+# gitignored and never exists on a runner. `36 passed, 15 skipped` is the
+# expected result. Those 15 assert frozen data constants (universe_size == 947,
+# median_pt_days == 22) and deliberately do NOT gate CI: they would fail on a
+# legitimate upstream data change. Data invariants belong to pipeline.validate,
+# which the nightly already runs before publishing.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths: &code
+      - 'pipeline/**'
+      - 'scraper/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/tests.yml'
+  pull_request:
+    paths: *code
+  workflow_dispatch:
+
+# Least privilege: this job never commits, never uploads a release and never
+# fires the deploy hook, unlike nightly.yml and scrape.yml which need write.
+permissions:
+  contents: read
+
+concurrency:
+  # Own group - must never collide with `scrape` or `nightly`. Per-ref so a PR
+  # and main do not cancel each other.
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081  # v5
+      # --locked fails if uv.lock has drifted from pyproject.toml rather than
+      # silently re-resolving.
+      - run: uv sync --locked
+      - run: uv run pytest -q
