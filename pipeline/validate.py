@@ -33,6 +33,27 @@ PASS, WARN, FAIL = "PASS", "WARN", "FAIL"
 ARTIFACT_KEYS_META = ("generated_at", "data_through", "years", "last_complete_year",
                       "partial_years", "universe_size", "coverage", "sources_cutover_utc")
 
+# Exact key sets for published rows. These ARE the contract, so `set(row) !=
+# want` is the assertion: an unannounced extra key fails as loudly as a missing
+# one. tests/test_publish_shapes.py imports these so there is one definition.
+ARTIFACT_KEYS_PT_RANK = frozenset({
+    "slug", "name", "sector", "days", "days_avarie", "days_programat",
+    "days_deficienta", "episodes", "longest_days", "est_day_eq", "delta_prev"})
+ARTIFACT_KEYS_ST_RANK = (ARTIFACT_KEYS_PT_RANK - {"sector"}) | {"sectors", "pt_slugs"}
+# Year objects use a SUBSET check instead: they are where additive fields land
+# most often, and validate should not block a future additive key.
+ARTIFACT_KEYS_PT_YEAR = frozenset({
+    "days", "days_avarie", "days_programat", "days_deficienta",
+    "episodes_count", "longest_days", "est_hours", "runs", "episodes",
+    "episodes_count_deficienta", "est_hours_deficienta", "episodes_deficienta"})
+ARTIFACT_KEYS_ST_YEAR = frozenset({
+    "days", "days_avarie", "days_programat", "days_deficienta", "runs"})
+
+# The three headline cause classes. `deficienta` is the pseudo-class feeding the
+# secondary counter, excluded from `days` by contract (ARTIFACTS.md:88-92).
+NON_DEFICIENTA = ("avarie", "programat", "unclassified")
+MAX_DOY = 366
+
 
 def _alias(db) -> dict[str, str]:
     try:
@@ -210,6 +231,88 @@ def check_sector_consistency(db, web: Path, harta_html: str,
     return out
 
 
+def _run_day_set(runs: list, classes: tuple[str, ...]) -> set[int]:
+    """Day-of-year numbers covered by runs whose cause is in `classes`.
+
+    Runs of different classes legitimately OVERLAP - a day can carry both an
+    avarie and a programat episode, which is exactly why ARTIFACTS.md says the
+    per-class counts may sum above `days`. So this unions DOY numbers rather
+    than summing run lengths; summing would over-count and make the contract
+    look breached on perfectly good data.
+
+    Callers must shape-check `runs` first (see _year_object_problems).
+    """
+    out: set[int] = set()
+    for start, length, cls in runs:
+        if cls in classes:
+            out.update(range(start, start + length))
+    return out
+
+
+def _year_object_problems(ns: str, yo) -> list[str]:
+    """Contract violations inside one entity-year object. `ns` is "pt" or "st".
+
+    The load-bearing check is ARTIFACTS.md:90-91, stated there as a hard
+    guarantee and enforced nowhere until now: the union of non-deficienta run
+    days equals `days`, and deficienta runs account for exactly
+    `days_deficienta`.
+
+    Returns strings and never raises - one malformed entity must not abort the
+    whole ndjson scan. Details carry only slugs, years and integers, never
+    cause_raw, so untrusted CMTEB text cannot forge PASS/FAIL lines in the CI
+    log (SEC049).
+    """
+    if not isinstance(yo, dict):
+        return [f"year object is {type(yo).__name__}, not an object"]
+    probs: list[str] = []
+    want = ARTIFACT_KEYS_PT_YEAR if ns == "pt" else ARTIFACT_KEYS_ST_YEAR
+    missing = sorted(want - set(yo))
+    if missing:
+        probs.append(f"missing keys {missing}")
+
+    runs = yo.get("runs")
+    if not isinstance(runs, list):
+        return probs + ["runs missing or not a list"]
+    for r in runs:
+        if not (isinstance(r, list) and len(r) == 3
+                and isinstance(r[0], int) and isinstance(r[1], int)
+                and isinstance(r[2], str)
+                and r[0] >= 1 and r[1] >= 1 and r[0] + r[1] - 1 <= MAX_DOY):
+            return probs + [f"malformed run {r}"]
+
+    if isinstance(yo.get("days"), int):
+        head = len(_run_day_set(runs, NON_DEFICIENTA))
+        if head != yo["days"]:
+            probs.append(f"non-deficienta runs cover {head} days != days {yo['days']}")
+    if isinstance(yo.get("days_deficienta"), int):
+        defi = len(_run_day_set(runs, ("deficienta",)))
+        if defi != yo["days_deficienta"]:
+            probs.append(f"deficienta runs cover {defi} days "
+                         f"!= days_deficienta {yo['days_deficienta']}")
+    return probs
+
+
+def _deficienta_problems(yo: dict) -> list[str]:
+    """PT-only reconciliation between deficienta counters and their episodes.
+
+    publish.py appends to episodes_deficienta and increments
+    episodes_count_deficienta in one loop, and derives the deficienta day set
+    from the SAME per-episode year Counter, so both relations below are exact
+    biconditionals by construction. Any drift is a real bug, never data noise.
+    """
+    probs: list[str] = []
+    for cnt_key, eps_key in (("episodes_count", "episodes"),
+                             ("episodes_count_deficienta", "episodes_deficienta")):
+        n, eps = yo.get(cnt_key), yo.get(eps_key)
+        if isinstance(eps, list) and isinstance(n, int) and n != len(eps):
+            probs.append(f"{cnt_key} {n} != len({eps_key}) {len(eps)}")
+    n, dd = yo.get("episodes_count_deficienta"), yo.get("days_deficienta")
+    if isinstance(n, int) and isinstance(dd, int) and (n > 0) != (dd > 0):
+        probs.append(f"episodes_count_deficienta {n} inconsistent "
+                     f"with days_deficienta {dd}")
+    return probs
+
+
 def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[tuple]:
     out = []
 
@@ -242,6 +345,12 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
     streets_with_addr = 0
     addr_numbers = 0
     addr_bad: list[str] = []
+    year_bad: list[str] = []          # runs_days_union
+    key_bad: list[str] = []           # ndjson_year_keys
+    recon_bad: list[str] = []         # deficienta_reconciliation
+    n_year_bad = n_key_bad = n_recon_bad = 0
+    defi_by_nsyear: Counter = Counter()   # (ns, "YYYY") -> sum(days_deficienta)
+    nsyears_seen: set[tuple] = set()
     for ns, rel in (("pt", "pt/all.ndjson.gz"), ("st", "strazi/all.ndjson.gz")):
         p = web / rel
         if not p.exists():
@@ -253,6 +362,25 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
                 for line in f:
                     o = json.loads(line)
                     bag.add(o["slug"])
+                    for ystr, yo in (o.get("years") or {}).items():
+                        nsyears_seen.add((ns, ystr))
+                        for msg in _year_object_problems(ns, yo):
+                            if msg.startswith("missing keys"):
+                                n_key_bad += 1
+                                if len(key_bad) < 5:
+                                    key_bad.append(f"{o['slug']}/{ystr}: {msg}")
+                            else:
+                                n_year_bad += 1
+                                if len(year_bad) < 5:
+                                    year_bad.append(f"{o['slug']}/{ystr}: {msg}")
+                        if ns == "pt" and isinstance(yo, dict):
+                            for msg in _deficienta_problems(yo):
+                                n_recon_bad += 1
+                                if len(recon_bad) < 5:
+                                    recon_bad.append(f"{o['slug']}/{ystr}: {msg}")
+                        if isinstance(yo, dict) and isinstance(
+                                yo.get("days_deficienta"), int):
+                            defi_by_nsyear[(ns, ystr)] += yo["days_deficienta"]
                     if ns == "st" and o.get("blocks"):
                         streets_with_blocks += 1
                         block_pts.update(b["pt"] for b in o["blocks"])
@@ -288,7 +416,33 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
                 f"addr pt_index out of range / bad -1: {addr_bad[:5]}" if addr_bad
                 else f"addr maps on {streets_with_addr} streets, {addr_numbers} numbers, all resolvable"))
 
+    # --- deficienta contract (ARTIFACTS.md:88-92) --------------------------
+    out.append((FAIL if year_bad else PASS, "runs_days_union",
+                f"{n_year_bad} entity-years breach the runs/days contract: "
+                + "; ".join(year_bad) if year_bad
+                else f"non-deficienta runs == days and deficienta runs == "
+                     f"days_deficienta across {len(nsyears_seen)} namespace-years"))
+    out.append((FAIL if key_bad else PASS, "ndjson_year_keys",
+                f"{n_key_bad} entity-years: " + "; ".join(key_bad) if key_bad
+                else "year objects carry the contract key set"))
+    out.append((FAIL if recon_bad else PASS, "deficienta_reconciliation",
+                f"{n_recon_bad} entity-years: " + "; ".join(recon_bad) if recon_bad
+                else "episode counts reconcile with episode arrays and day counts"))
+    # Heuristic, not an identity: a genuinely quiet year is conceivable upstream,
+    # and FAILing on it would let a CMTEB editorial change block the release.
+    # Every namespace-year at zero simultaneously is a pipeline regression, so
+    # only that case FAILs.
+    vac = sorted(f"{ns}-{y}" for (ns, y) in nsyears_seen
+                 if defi_by_nsyear[(ns, y)] == 0)
+    lvl = FAIL if vac and len(vac) == len(nsyears_seen) else WARN if vac else PASS
+    out.append((lvl, "deficienta_non_vacuous",
+                f"days_deficienta is 0 across every entity in: {vac[:6]}" if vac
+                else f"days_deficienta populated in all {len(nsyears_seen)} "
+                     f"namespace-years"))
+
     rank_bad = []
+    row_key_bad: list[str] = []
+    n_row_key_bad = 0
     for y in years:
         dist = load(f"city/distribution-{y}.json")
         if dist is not None:
@@ -299,6 +453,23 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
         for kind, bag in (("pt", pt_slugs), ("strazi", st_slugs)):
             rows = load(f"rankings/{kind}-{y}.json")
             if rows is None:
+                continue
+            # Shape pre-pass, deliberately BEFORE the value checks. Two
+            # reasons: the r["days"]/r["slug"] accesses below would raise
+            # KeyError on a malformed row and kill validate with a traceback
+            # instead of a FAIL; and the `break`s below stop at the first bad
+            # row, so a key regression further down would never be seen.
+            want = ARTIFACT_KEYS_PT_RANK if kind == "pt" else ARTIFACT_KEYS_ST_RANK
+            file_bad = False
+            for i, r in enumerate(rows):
+                if not isinstance(r, dict) or set(r) != want:
+                    file_bad = True
+                    n_row_key_bad += 1
+                    if len(row_key_bad) < 5:
+                        diff = (sorted(set(r) ^ want) if isinstance(r, dict)
+                                else type(r).__name__)
+                        row_key_bad.append(f"{kind}-{y} row {i}: {diff}")
+            if file_bad:
                 continue
             days_seq = [r["days"] for r in rows]
             if days_seq != sorted(days_seq, reverse=True):
@@ -320,6 +491,9 @@ def check_artifacts(web: Path, registry_slugs: set[str] | None = None) -> list[t
                     f["geometry"]["type"] != "Point" or len(f["geometry"]["coordinates"]) != 2
                     for f in feats):
                 out.append((FAIL, "map_geojson", f"pt-{y}.geojson malformed"))
+    out.append((FAIL if row_key_bad else PASS, "rankings_row_keys",
+                f"{n_row_key_bad} rows: " + "; ".join(row_key_bad) if row_key_bad
+                else f"ranking rows carry the exact contract keys for {len(years)} years"))
     out.append((FAIL if rank_bad else PASS, "rankings_integrity",
                 "; ".join(rank_bad[:5]) if rank_bad
                 else f"rankings resolvable + sorted for {len(years)} years"))

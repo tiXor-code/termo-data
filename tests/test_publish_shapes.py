@@ -11,15 +11,19 @@ from pathlib import Path
 
 import pytest
 
+from pipeline import validate
+
 DB = Path("db/termo.db")
 HARTA = Path("data/harta.html")
 
 pytestmark = pytest.mark.skipif(not DB.exists() or not HARTA.exists(),
                                 reason="real db/harta not present")
 
-PT_KEYS = {"slug", "name", "sector", "days", "days_avarie", "days_programat",
-           "days_deficienta", "episodes", "longest_days", "est_day_eq", "delta_prev"}
-ST_KEYS = (PT_KEYS - {"sector"}) | {"sectors", "pt_slugs"}
+# Imported rather than redeclared: pipeline/validate.py enforces these same key
+# sets on CI (where this file is skipped for lack of a db), so two copies would
+# be free to drift apart silently.
+PT_KEYS = set(validate.ARTIFACT_KEYS_PT_RANK)
+ST_KEYS = set(validate.ARTIFACT_KEYS_ST_RANK)
 
 
 @pytest.fixture(scope="module")

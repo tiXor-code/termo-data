@@ -79,7 +79,12 @@ One JSON object per line per PT ever seen (universe + standalone entities):
    "episodes": [{"start": "2025-04-24T07:00", "end": "2025-10-16T23:00",
      "ongoing": false, "uncertain": true, "cause_class": "programat",
      "cause_raw": "Revizie tehnica CTE Progresu",
-     "remediere_last": "2025-10-15T23:00"}]}}}
+     "remediere_last": "2025-10-15T23:00"}],
+   "episodes_count_deficienta": 2, "est_hours_deficienta": 61.5,
+   "episodes_deficienta": [{"start": "2025-07-19T08:00", "end": "2025-07-20T08:00",
+     "ongoing": false, "uncertain": false, "cause_class": "unclassified",
+     "cause_raw": "Lipsa parametri pentru livrare apa calda de consum",
+     "remediere_last": null}]}}}
 ```
 `runs` = [start_day_of_year (1-based, local), length_days, cause_class],
 episodes clipped to the year; ongoing = ended_before null; uncertain =
@@ -91,6 +96,14 @@ Run `cause_class` takes one of FOUR values: `avarie`, `programat`,
 of non-deficienta runs equals `days` for every PT-year and street-year).
 Consumers painting or summing headline days must exclude `deficienta` runs.
 
+Deficienta also carries its own episode array and counters:
+`episodes_deficienta`, `episodes_count_deficienta`, `est_hours_deficienta`
+(PT only - streets have no episode array at all). These are DISJOINT from the
+headline trio: `episodes` / `episodes_count` / `est_hours` never include a
+deficienta episode, and the deficienta three never include an oprire one. They
+must never be summed into the headline. `days_deficienta > 0` if and only if
+`episodes_count_deficienta > 0`.
+
 ### strazi/all.ndjson.gz
 ```json
 {"slug": "sos-pantelimon", "name": "Sos Pantelimon", "type": "sos",
@@ -100,6 +113,7 @@ Consumers painting or summing headline days must exclude `deficienta` runs.
  "inferred_pt": null, "inferred_km": null,
  "addr": {"64": [3, 0.18], "64a": [3, 0.2], "70": [5, 0.42]},
  "years": {"2025": {"days": 181, "days_avarie": 121, "days_programat": 74,
+   "days_deficienta": 28,
    "runs": [[10, 3, "avarie"], "..."]}}}
 ```
 Street universe = streets CMTEB named in outages UNION all named Bucharest
