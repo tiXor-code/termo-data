@@ -307,6 +307,12 @@ def build(db_path: str, registry_path: str, harta_html: str,
     pt_eps: dict[tuple, list[dict]] = defaultdict(list)       # (pt, y) display episodes
     pt_epn: Counter = Counter()                               # (pt, y) oprire eps touching
     pt_hours: dict[tuple, float] = defaultdict(float)         # (pt, y) split est_hours
+    # Parallel deficienta structures, deliberately separate from every headline
+    # map above. Nothing here ever feeds pt_days, city_eps, pt_epn or pt_hours,
+    # so `days` and everything derived from it stay byte-identical to v1.
+    pt_eps_defi: dict[tuple, list[dict]] = defaultdict(list)   # (pt, y) display eps
+    pt_epn_defi: Counter = Counter()                           # (pt, y) eps touching
+    pt_hours_defi: dict[tuple, float] = defaultdict(float)     # (pt, y) split est_hours
     pt_blocks: dict[str, int] = {}
     sector_votes: dict[str, Counter] = defaultdict(Counter)
     city_eps: Counter = Counter()                             # start-year attributed
@@ -329,9 +335,23 @@ def build(db_path: str, registry_path: str, harta_html: str,
             sector_votes[pt][sector] += 1
         if blocks:
             pt_blocks[pt] = max(pt_blocks.get(pt, 0), blocks)
+        # The display record is a pure function of the episode row, so it is
+        # hoisted above the severity branch and shared. Building it for
+        # deficienta rows is the new behaviour; the oprire record is unchanged.
+        epd = {"start": fmt_minute(first), "end": fmt_minute(last),
+               "ongoing": ended is None, "uncertain": bool(gap),
+               "cause_class": cls, "cause_raw": craw,
+               "remediere_last": _rem_iso(rem)}
         if sev == "deficienta":
             for d in days:
                 pt_cls[(pt, d.year, "deficienta")].add(d)
+            # Same proportional year-split rule as the oprire path below, and
+            # keyed off the same `ycount`, so days_deficienta > 0 and
+            # episodes_count_deficienta > 0 hold on identical year sets.
+            for y, c in ycount.items():
+                pt_eps_defi[(pt, y)].append(epd)
+                pt_epn_defi[(pt, y)] += 1
+                pt_hours_defi[(pt, y)] += est_h * (c / len(days))
             continue
         y0 = local(first).year
         city_eps[y0] += 1
@@ -341,10 +361,6 @@ def build(db_path: str, registry_path: str, harta_html: str,
         for d in days:
             pt_days[(pt, d.year)].add(d)
             pt_cls[(pt, d.year, cls)].add(d)
-        epd = {"start": fmt_minute(first), "end": fmt_minute(last),
-               "ongoing": ended is None, "uncertain": bool(gap),
-               "cause_class": cls, "cause_raw": craw,
-               "remediere_last": _rem_iso(rem)}
         for y, c in ycount.items():
             pt_eps[(pt, y)].append(epd)
             pt_epn[(pt, y)] += 1
@@ -718,6 +734,9 @@ def build(db_path: str, registry_path: str, harta_html: str,
         write_json(out / "client" / "map" / f"pt-{y}.geojson",
                    {"type": "FeatureCollection", "features": feats})
 
+    def _epkey(e):
+        return (e["start"], e["end"], e["cause_class"], e["cause_raw"] or "")
+
     pt_lines = []
     for pt in sorted(pts_all, key=lambda p: pt_slug[p]):
         years_obj = {}
@@ -726,9 +745,8 @@ def build(db_path: str, registry_path: str, harta_html: str,
             defi = pt_cls.get((pt, y, "deficienta"), set())
             if not union and not defi:
                 continue
-            eps = sorted(pt_eps.get((pt, y), ()),
-                         key=lambda e: (e["start"], e["end"], e["cause_class"],
-                                        e["cause_raw"] or ""))
+            eps = sorted(pt_eps.get((pt, y), ()), key=_epkey)
+            eps_defi = sorted(pt_eps_defi.get((pt, y), ()), key=_epkey)
             years_obj[str(y)] = {
                 "days": len(union),
                 "days_avarie": len(pt_cls.get((pt, y, "avarie"), ())),
@@ -739,6 +757,12 @@ def build(db_path: str, registry_path: str, harta_html: str,
                 "est_hours": round(pt_hours[(pt, y)], 1),
                 "runs": _runs(pt_cls, pt, y),
                 "episodes": eps,
+                # Additive deficienta counterparts. Disjoint from the three
+                # above: episodes_count / est_hours / episodes never include a
+                # deficienta episode, and these never include an oprire one.
+                "episodes_count_deficienta": pt_epn_defi[(pt, y)],
+                "est_hours_deficienta": round(pt_hours_defi[(pt, y)], 1),
+                "episodes_deficienta": eps_defi,
             }
         c = pt_coord.get(pt)
         pt_lines.append({
@@ -766,6 +790,12 @@ def build(db_path: str, registry_path: str, harta_html: str,
                 "days": len(union),
                 "days_avarie": len(st_cls.get((k, y, "avarie"), ())),
                 "days_programat": len(st_cls.get((k, y, "programat"), ())),
+                # `defi` was already computed above as the emission gate but was
+                # never written out, so street-years shipped deficienta RUNS with
+                # no counter to reconcile them against - and ARTIFACTS.md:91
+                # claims the union invariant holds "for every PT-year and
+                # street-year". Emitting it makes publish match the contract.
+                "days_deficienta": len(defi),
                 "runs": _runs(st_cls, k, y),
             }
         blocks = []

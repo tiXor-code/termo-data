@@ -1,5 +1,6 @@
 """Validate checks against synthetic dbs and a minimal artifact tree."""
 
+import json
 import sqlite3
 
 from pipeline import validate
@@ -70,6 +71,53 @@ def test_unclassified_12_pct_warns_exit_zero(tmp_path):
     assert validate.exit_code(results) == 0
 
 
+# --- fixture year objects -------------------------------------------------
+# Internally consistent by construction: every day count is exactly the union
+# of the matching runs, so any override that breaks one relation trips exactly
+# the check under test and nothing else.
+_EP = {"start": "2025-05-01T10:00", "end": "2025-05-03T10:00", "ongoing": False,
+       "uncertain": False, "cause_class": "avarie", "cause_raw": "c",
+       "remediere_last": None}
+_EP_DEFI = {"start": "2025-07-19T08:00", "end": "2025-07-20T08:00",
+            "ongoing": False, "uncertain": False, "cause_class": "unclassified",
+            "cause_raw": "presiune scazuta", "remediere_last": None}
+
+
+def _pt_year(**over):
+    """days=3 <- [121,3,avarie] (doy 121-123); days_deficienta=2 <- [200,2,deficienta]."""
+    y = {"days": 3, "days_avarie": 3, "days_programat": 0, "days_deficienta": 2,
+         "episodes_count": 1, "longest_days": 3, "est_hours": 48.0,
+         "runs": [[121, 3, "avarie"], [200, 2, "deficienta"]],
+         "episodes": [_EP],
+         "episodes_count_deficienta": 1, "est_hours_deficienta": 24.0,
+         "episodes_deficienta": [_EP_DEFI]}
+    y.update(over)
+    return y
+
+
+def _st_year(**over):
+    """days=3 <- [121,3,avarie]; days_deficienta=1 <- [300,1,deficienta]."""
+    y = {"days": 3, "days_avarie": 3, "days_programat": 0, "days_deficienta": 1,
+         "runs": [[121, 3, "avarie"], [300, 1, "deficienta"]]}
+    y.update(over)
+    return y
+
+
+def _pt_record(**over):
+    r = {"slug": "pt-a", "name": "A", "sector": 1, "lat": 44.4, "lon": 26.1,
+         "on_map": True, "blocks_estimate": None, "streets": [], "nearest": [],
+         "years": {"2025": _pt_year()}}
+    r.update(over)
+    return r
+
+
+def _st_record(**over):
+    r = {"slug": "str-b", "name": "Str B", "type": "str", "sectors": [1],
+         "pts": ["pt-a"], "neighbors": [], "years": {"2025": _st_year()}}
+    r.update(over)
+    return r
+
+
 def _minimal_web(tmp_path):
     web = tmp_path / "web"
     write_json(web / "meta.json", {
@@ -91,7 +139,10 @@ def _minimal_web(tmp_path):
         {"slug": "pt-a", "name": "A", "sector": 1, "days": 3, "days_avarie": 3,
          "days_programat": 0, "days_deficienta": 0, "episodes": 1,
          "longest_days": 3, "est_day_eq": 3.0, "delta_prev": None}])
-    write_json(web / "rankings" / "strazi-2025.json", [])
+    write_json(web / "rankings" / "strazi-2025.json", [
+        {"slug": "str-b", "name": "Str B", "sectors": [1], "pt_slugs": ["pt-a"],
+         "days": 3, "days_avarie": 3, "days_programat": 0, "days_deficienta": 1,
+         "episodes": 1, "longest_days": 3, "est_day_eq": 3.0, "delta_prev": None}])
     write_json(web / "rankings" / "sectoare-2025.json", [
         {"sector": s, "pts": 1 if s == 1 else 0, "median_days": 0,
          "mean_days": 0.0, "mean_days_avarie": 0.0, "mean_days_programat": 0.0,
@@ -107,13 +158,8 @@ def _minimal_web(tmp_path):
         {"t": "st", "n": "Str B", "s": "str-b", "sec": 1, "d": 3}])
     write_json(web / "og" / "stats.json", {"pt-a": ["pt", "A", 1, 3, 2025],
                                            "str-b": ["st", "Str B", 1, 3, 2025]})
-    write_ndjson_gz(web / "pt" / "all.ndjson.gz", [
-        {"slug": "pt-a", "name": "A", "sector": 1, "lat": 44.4, "lon": 26.1,
-         "on_map": True, "blocks_estimate": None, "streets": [], "nearest": [],
-         "years": {"2025": {"days": 3}}}])
-    write_ndjson_gz(web / "strazi" / "all.ndjson.gz", [
-        {"slug": "str-b", "name": "Str B", "type": "str", "sectors": [1],
-         "pts": ["pt-a"], "neighbors": [], "years": {"2025": {"days": 3}}}])
+    write_ndjson_gz(web / "pt" / "all.ndjson.gz", [_pt_record()])
+    write_ndjson_gz(web / "strazi" / "all.ndjson.gz", [_st_record()])
     return web
 
 
@@ -146,3 +192,142 @@ def test_unsorted_rankings_fail(tmp_path):
     results = validate.check_artifacts(web, {"pt-a", "str-b"})
     assert any(r[1] == "rankings_integrity" and r[0] == validate.FAIL
                for r in results)
+
+
+# --- deficienta contract (ARTIFACTS.md:88-92) -----------------------------
+
+def test_run_day_set_unions_overlapping_classes():
+    # A day can carry BOTH an avarie and a programat episode - ARTIFACTS.md says
+    # the per-class day counts may sum above `days`. So the invariant must union
+    # day-of-year numbers, never sum run lengths, or it fails on correct data.
+    runs = [[10, 3, "avarie"], [12, 3, "programat"], [50, 1, "deficienta"]]
+    assert validate._run_day_set(runs, validate.NON_DEFICIENTA) == {10, 11, 12, 13, 14}
+    assert validate._run_day_set(runs, ("deficienta",)) == {50}
+
+
+def test_runs_days_union_mismatch_fails(tmp_path):
+    web = _minimal_web(tmp_path)
+    # runs still cover only 3 days while `days` claims 4
+    write_ndjson_gz(web / "pt" / "all.ndjson.gz",
+                    [_pt_record(years={"2025": _pt_year(days=4)})])
+    results = validate.check_artifacts(web, {"pt-a", "str-b"})
+    assert any(r[1] == "runs_days_union" and r[0] == validate.FAIL for r in results)
+    assert validate.exit_code(results) == 1
+
+
+def test_street_runs_days_union_mismatch_fails(tmp_path):
+    # The strazi half of the ARTIFACTS.md:91 guarantee. Vacuous before this work,
+    # because street year objects carried no days_deficienta at all.
+    web = _minimal_web(tmp_path)
+    write_ndjson_gz(web / "strazi" / "all.ndjson.gz",
+                    [_st_record(years={"2025": _st_year(days_deficienta=7)})])
+    results = validate.check_artifacts(web, {"pt-a", "str-b"})
+    assert any(r[1] == "runs_days_union" and r[0] == validate.FAIL for r in results)
+
+
+def test_missing_year_key_fails(tmp_path):
+    web = _minimal_web(tmp_path)
+    y = _pt_year()
+    del y["days_deficienta"]
+    write_ndjson_gz(web / "pt" / "all.ndjson.gz", [_pt_record(years={"2025": y})])
+    results = validate.check_artifacts(web, {"pt-a", "str-b"})
+    assert any(r[1] == "ndjson_year_keys" and r[0] == validate.FAIL for r in results)
+
+
+def test_deficienta_episode_count_mismatch_fails(tmp_path):
+    web = _minimal_web(tmp_path)
+    write_ndjson_gz(web / "pt" / "all.ndjson.gz",
+                    [_pt_record(years={"2025": _pt_year(episodes_count_deficienta=4)})])
+    results = validate.check_artifacts(web, {"pt-a", "str-b"})
+    assert any(r[1] == "deficienta_reconciliation" and r[0] == validate.FAIL
+               for r in results)
+
+
+def test_ranking_row_missing_days_deficienta_fails(tmp_path):
+    web = _minimal_web(tmp_path)
+    rows = [{"slug": "pt-a", "name": "A", "sector": 1, "days": 3, "days_avarie": 3,
+             "days_programat": 0, "episodes": 1, "longest_days": 3,
+             "est_day_eq": 3.0, "delta_prev": None}]      # days_deficienta dropped
+    write_json(web / "rankings" / "pt-2025.json", rows)
+    results = validate.check_artifacts(web, {"pt-a", "str-b"})
+    assert any(r[1] == "rankings_row_keys" and r[0] == validate.FAIL for r in results)
+
+
+def test_ranking_key_check_survives_a_bad_first_row(tmp_path):
+    # Guards the pre-existing `break` short-circuit: an unresolvable slug in row 0
+    # must not hide a key regression in row 1.
+    web = _minimal_web(tmp_path)
+    write_json(web / "rankings" / "pt-2025.json", [
+        {"slug": "pt-ghost", "name": "G", "sector": 1, "days": 9, "days_avarie": 9,
+         "days_programat": 0, "days_deficienta": 0, "episodes": 1,
+         "longest_days": 9, "est_day_eq": 9.0, "delta_prev": None},
+        {"slug": "pt-a", "name": "A", "sector": 1, "days": 3, "days_avarie": 3,
+         "days_programat": 0, "episodes": 1, "longest_days": 3,
+         "est_day_eq": 3.0, "delta_prev": None}])          # days_deficienta dropped
+    results = validate.check_artifacts(web, {"pt-a", "str-b"})
+    assert any(r[1] == "rankings_row_keys" and r[0] == validate.FAIL for r in results)
+
+
+def test_all_zero_deficienta_warns_but_does_not_block_release(tmp_path):
+    # A quiet year is plausible upstream; blocking the nightly on it would let an
+    # editorial change at CMTEB stop publication. WARN, not FAIL.
+    web = _minimal_web(tmp_path)
+    write_ndjson_gz(web / "pt" / "all.ndjson.gz", [_pt_record(years={"2025": _pt_year(
+        days_deficienta=0, episodes_count_deficienta=0, est_hours_deficienta=0.0,
+        episodes_deficienta=[], runs=[[121, 3, "avarie"]])})])
+    results = validate.check_artifacts(web, {"pt-a", "str-b"})
+    assert any(r[1] == "deficienta_non_vacuous" and r[0] == validate.WARN
+               for r in results)
+    assert validate.exit_code(results) == 0
+
+
+def test_deficienta_episodes_published_without_touching_headline(tmp_path):
+    """The additivity contract, proven end-to-end through publish.build().
+
+    A deficienta episode must contribute to days_deficienta and the new
+    episode fields, and to NOTHING else: not days, not episodes_count, not
+    est_hours, not the episodes array.
+    """
+    from pipeline import publish
+    db = _db(tmp_path)
+    _ep(db, pt="pt a", sev="oprire",
+        first="2025-05-01T10:00:00+03:00", last="2025-05-02T10:00:00+03:00")
+    _ep(db, pt="pt a", sev="deficienta",
+        first="2025-07-01T10:00:00+03:00", last="2025-07-03T10:00:00+03:00")
+    # build() derives the year range from snapshot coverage, so the synthetic db
+    # needs the two bookend snapshots that bracket 2025.
+    for i, ts in enumerate(("2025-01-01T00:00:00+00:00", "2025-12-31T00:00:00+00:00")):
+        db.execute("INSERT INTO snapshot (sha, observed_utc, content_hash, "
+                   "n_records, parse_status, changed) VALUES (?,?,?,?,?,?)",
+                   (f"sha{i}", ts, f"h{i}", 1, "ok", 1))
+    db.commit()
+    db.close()
+
+    # Empty static/ skips the OSM street + address joins, which are irrelevant
+    # here and turn a 0.0s test into a 45s one.
+    empty_static = tmp_path / "static"
+    empty_static.mkdir()
+    out = tmp_path / "web"
+    publish.build(str(tmp_path / "t.db"), str(tmp_path / "reg.json"),
+                  "data/harta.html", str(empty_static), str(out))
+
+    import gzip as _gz
+    with _gz.open(out / "pt" / "all.ndjson.gz", "rt", encoding="utf-8") as f:
+        rec = next(r for r in map(json.loads, f) if r["slug"] == "pt-pt-a")
+    y = rec["years"]["2025"]
+
+    # headline half - every one of these must be blind to the deficienta episode
+    assert y["days"] == 2
+    assert y["episodes_count"] == 1
+    assert y["est_hours"] == 24.0          # the deficienta episode's hours are NOT here
+    assert len(y["episodes"]) == 1
+    assert y["episodes"][0]["cause_class"] == "avarie"
+
+    # deficienta half
+    assert y["days_deficienta"] == 3
+    assert y["episodes_count_deficienta"] == 1
+    assert len(y["episodes_deficienta"]) == 1
+    assert y["est_hours_deficienta"] > 0
+
+    # and the two never mix
+    assert y["episodes_deficienta"][0] not in y["episodes"]
