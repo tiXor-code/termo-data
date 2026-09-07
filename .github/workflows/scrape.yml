@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # dispatch Nightly publish when the live state moves
 
 concurrency:
   group: scrape
@@ -22,15 +23,38 @@ jobs:
       - name: Scrape
         run: python3 scraper/scrape.py
 
+      # Must run BEFORE the commit: it diffs the working tree against HEAD.
+      - name: Did the live outage state change?
+        id: live
+        run: python3 scripts/live_changed.py
+
       - name: Commit if changed
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/
           if git diff --cached --quiet; then
             echo "no changes"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "snapshot $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             git pull --rebase origin main
             git push
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # The site is static and was rebuilt only at 03:10, so a new outage - or a
+      # revised restore estimate - could sit invisible for up to 24h. A visitor
+      # reported exactly that on 2026-08-31. Publishing here closes that gap to
+      # roughly the scrape interval.
+      #
+      # Gated on the live-state hash, not the raw bytes, so markup churn cannot
+      # trigger a rebuild. Nightly publish keeps its own 03:10 schedule for the
+      # historical rebuild; this only adds intraday publishes. Its `concurrency:
+      # nightly` group serialises overlapping runs.
+      - name: Publish now if the live state moved
+        if: steps.commit.outputs.committed == 'true' && steps.live.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run nightly.yml -R ${{ github.repository }}
