@@ -55,9 +55,22 @@ def emit(changed: bool, reason: str) -> None:
 
 
 def live_hash(html: bytes) -> str:
-    from pipeline.parse import content_hash, parse_page
+    """Canonical hash of the live records, with "no outages" as a real state.
 
-    return content_hash(parse_page(html))
+    `EmptyState` is NOT an error: parse.py raises it for CMTEB's routine
+    "nu exista inregistrari" banner, and backfill.py already handles it
+    separately from ParseFailure. Folding it into the generic failure path
+    would make every scrape look changed for as long as the city has no active
+    outages - publishing constantly at exactly the times there is nothing to
+    publish. Zero records is a legitimate hash, so two empty scrapes compare
+    equal while empty->outage and outage->empty both still trigger.
+    """
+    from pipeline.parse import EmptyState, content_hash, parse_page
+
+    try:
+        return content_hash(parse_page(html))
+    except EmptyState:
+        return content_hash([])
 
 
 def main() -> None:
@@ -79,11 +92,19 @@ def main() -> None:
     try:
         before = live_hash(previous)
         after = live_hash(current)
-    except Exception as exc:  # noqa: BLE001 - a parser change must not go silent
+    except Exception as exc:  # noqa: BLE001 - a real ParseFailure must not go silent
         emit(True, f"parse failed ({type(exc).__name__}: {exc}) - failing open")
 
     emit(before != after, f"{before[:12]} -> {after[:12]}")
 
 
 if __name__ == "__main__":
-    main()
+    # This step runs BEFORE "Commit if changed". An uncaught exception here
+    # would fail the step and skip the commit, losing the scraped snapshot
+    # entirely - far worse than a missed publish. Nothing escapes.
+    try:
+        main()
+    except SystemExit:
+        raise
+    except BaseException as exc:  # noqa: BLE001
+        emit(True, f"detector crashed ({type(exc).__name__}: {exc}) - failing open")

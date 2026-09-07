@@ -24,8 +24,12 @@ jobs:
         run: python3 scraper/scrape.py
 
       # Must run BEFORE the commit: it diffs the working tree against HEAD.
+      # continue-on-error is the structural guarantee behind the script's own
+      # fail-open: even a hard crash here must never stop the commit below and
+      # lose the scraped snapshot. Losing data is worse than a missed publish.
       - name: Did the live outage state change?
         id: live
+        continue-on-error: true
         run: python3 scripts/live_changed.py
 
       - name: Commit if changed
@@ -54,7 +58,7 @@ jobs:
       # historical rebuild; this only adds intraday publishes. Its `concurrency:
       # nightly` group serialises overlapping runs.
       - name: Publish now if the live state moved
-        if: steps.commit.outputs.committed == 'true' && steps.live.outputs.changed == 'true'
+        if: steps.commit.outputs.committed == 'true' && steps.live.outputs.changed != 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run nightly.yml -R ${{ github.repository }}
