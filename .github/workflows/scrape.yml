@@ -24,6 +24,13 @@ jobs:
         run: python3 scraper/scrape.py
 
       # Must run BEFORE the commit: it diffs the working tree against HEAD.
+      # scrape.py is deliberately pure-stdlib so this 15-minute job installs
+      # nothing. The detector reuses pipeline/parse.py, which needs lxml - and
+      # without it the detector silently failed open on every run, publishing on
+      # every commit. One wheel, ~seconds; version matches pyproject.
+      - name: Install the parser's one dependency
+        run: pip install --quiet --disable-pip-version-check 'lxml>=6.1.1'
+
       # continue-on-error is the structural guarantee behind the script's own
       # fail-open: even a hard crash here must never stop the commit below and
       # lose the scraped snapshot. Losing data is worse than a missed publish.

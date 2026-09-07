@@ -44,9 +44,14 @@ PAGE_A = REPO / "data" / "functionare.html"
 sys.path.insert(0, str(REPO))
 
 
-def emit(changed: bool, reason: str) -> None:
+def emit(changed: bool, reason: str, degraded: bool = False) -> None:
     value = "true" if changed else "false"
     print(f"changed={value}  ({reason})")
+    # Failing open is safe but SILENT: a permanently broken detector just
+    # publishes on every commit and nobody notices. A missing lxml did exactly
+    # that on the first real run. Surface it as a run annotation instead.
+    if degraded:
+        print(f"::warning title=Live-state detector degraded::{reason}")
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
         with open(out, "a", encoding="utf-8") as fh:
@@ -77,7 +82,7 @@ def main() -> None:
     try:
         current = PAGE_A.read_bytes()
     except OSError as exc:
-        emit(True, f"cannot read working-tree page A ({exc}) - failing open")
+        emit(True, f"cannot read working-tree page A ({exc}) - failing open", degraded=True)
 
     try:
         previous = subprocess.run(
@@ -87,13 +92,13 @@ def main() -> None:
             check=True,
         ).stdout
     except subprocess.CalledProcessError:
-        emit(True, "no previous page A at HEAD - first run, failing open")
+        emit(True, "no previous page A at HEAD - first run, failing open", degraded=True)
 
     try:
         before = live_hash(previous)
         after = live_hash(current)
     except Exception as exc:  # noqa: BLE001 - a real ParseFailure must not go silent
-        emit(True, f"parse failed ({type(exc).__name__}: {exc}) - failing open")
+        emit(True, f"parse failed ({type(exc).__name__}: {exc}) - failing open", degraded=True)
 
     emit(before != after, f"{before[:12]} -> {after[:12]}")
 
@@ -107,4 +112,4 @@ if __name__ == "__main__":
     except SystemExit:
         raise
     except BaseException as exc:  # noqa: BLE001
-        emit(True, f"detector crashed ({type(exc).__name__}: {exc}) - failing open")
+        emit(True, f"detector crashed ({type(exc).__name__}: {exc}) - failing open", degraded=True)
